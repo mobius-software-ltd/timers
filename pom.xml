@@ -46,7 +46,7 @@
 	<scm>
 		<url>https://github.com/mobius-software-ltd/timers</url>
 		<connection>scm:git:git://github.com:mobius-software-ltd/timers.git</connection>
-		<developerConnection>scm:git:git@github.com:mobius-software-ltd/timers.git </developerConnection>		
+		<developerConnection>scm:git:git@github.com:mobius-software-ltd/timers.git</developerConnection>		
 	</scm>
 
 	<developers>
