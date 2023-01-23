@@ -1,0 +1,5 @@
+/.settings/
+target
+*.properties
+*.xml.releaseBackup
+/build/

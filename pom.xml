@@ -1,0 +1,129 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.mobius-software</groupId>
+	<artifactId>mobius-timers</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>mobius-timers</name>
+	<description>Mobius timers library</description>
+	<url>http://www.mobius-software.com</url>
+
+	<properties>
+		<log4j2.version>2.17.2</log4j2.version>	
+		<compiler.plugin.version>3.8.1</compiler.plugin.version>
+		<compile.source>1.8</compile.source>		
+	</properties>
+	
+	<licenses>
+		<license>
+			<name>LGPL 2.1</name>
+			<url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html</url>
+			<distribution>repo</distribution>
+			<comments>GNU Lesser General Public License</comments>
+		</license>
+	</licenses>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j2.version}</version>
+		</dependency>
+				
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>${log4j2.version}</version>
+		</dependency>
+	</dependencies>		
+	
+	<organization>
+		<name>Mobius Software</name>
+		<url>http://www.mobius-software.com</url>
+	</organization>
+
+	<scm>
+		<url>https://github.com/mobius-software-ltd/timers</url>
+		<connection>scm:git:git://github.com:mobius-software-ltd/timers.git</connection>
+		<developerConnection>scm:git:git@github.com:mobius-software-ltd/timers.git </developerConnection>		
+	</scm>
+
+	<developers>
+		<developer>
+			<id>Yulian</id>
+			<name>Yulian Oifa</name>
+			<email>yulian.oifa@mobius-software.com</email>
+			<organization>Mobius Software</organization>
+			<organizationUrl>http://www.mobius-software.com</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>+2</timezone>
+		</developer>
+	</developers>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${compiler.plugin.version}</version>
+				<configuration>
+					<source>${compile.source}</source>
+					<target>${compile.source}</target>
+					<debug>${compile.debug}</debug>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M6</version>				
+				<configuration>
+				    <skipTests>false</skipTests>					
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.2</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>mobius-public-releases-repository</id>
+			<name>Mobius Public Releases Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+		<snapshotRepository>
+			<id>mobius-publis-snapshots-repository</id>
+			<name>Mobius Public Snapshots Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+</project>
