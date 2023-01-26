@@ -23,10 +23,10 @@
 	
 	<licenses>
 		<license>
-			<name>LGPL 2.1</name>
-			<url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html</url>
+			<name>AGPL 3.0</name>
+			<url>https://www.gnu.org/licenses/why-affero-gpl.en.html</url>
 			<distribution>repo</distribution>
-			<comments>GNU Lesser General Public License</comments>
+			<comments>GNU Affedo General Public License</comments>
 		</license>
 	</licenses>
 
