@@ -16,7 +16,7 @@
 	<url>http://www.mobius-software.com</url>
 
 	<properties>
-		<log4j2.version>2.17.2</log4j2.version>	
+		<log4j2.version>2.19.0</log4j2.version>	
 		<compiler.plugin.version>3.8.1</compiler.plugin.version>
 		<compile.source>1.8</compile.source>		
 	</properties>
