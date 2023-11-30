@@ -34,23 +34,33 @@ public class WorkerPool
 	private ScheduledExecutorService timersExecutor;
 	private ExecutorService workersExecutors;
 	
+	private long taskPoolInterval = 100L;
+	private List<Worker> workers;
+	
 	public WorkerPool()
 	{
 		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(100, queue);		
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, queue);		
+	}
+	
+	public WorkerPool(long taskPoolInterval)
+	{
+		this.taskPoolInterval = taskPoolInterval;
+		queue=new CountableQueue<Task>();
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, queue);		
 	}
 
 	public void start(int workersNumber)
 	{
 		timersExecutor = Executors.newScheduledThreadPool(1);
-		timersExecutor.scheduleAtFixedRate(new TimersRunner(periodicQueue), 0, 100, TimeUnit.MILLISECONDS);
+		timersExecutor.scheduleAtFixedRate(new TimersRunner(periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
 		
 		workersExecutors = Executors.newFixedThreadPool(workersNumber);
 		
-		List<Worker> workers=new ArrayList<Worker>();
+		workers = new ArrayList<Worker>();
 		for(int i=0;i<workersNumber;i++)
 		{
-			workers.add(new Worker(queue, true));
+			workers.add(new Worker(queue, new CountableQueue<Task>(), true));
 			workersExecutors.execute(workers.get(i));
 		}
 	}
@@ -62,6 +72,8 @@ public class WorkerPool
 		
 		timersExecutor.shutdown();
 		timersExecutor = null;
+		
+		workers = null;
 	}
 	
 	public CountableQueue<Task> getQueue() 
@@ -69,6 +81,14 @@ public class WorkerPool
 		return queue;
 	}
 
+	public CountableQueue<Task> getLocalQueue(int index) 
+	{
+		if(workers == null || index>=workers.size())
+			return null;
+		
+		return workers.get(index).getLocalQueue();
+	}
+	
 	public PeriodicQueuedTasks<Timer> getPeriodicQueue() 
 	{
 		return periodicQueue;

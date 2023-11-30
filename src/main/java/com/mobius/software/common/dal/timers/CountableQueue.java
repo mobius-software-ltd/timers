@@ -53,6 +53,14 @@ public class CountableQueue<T extends Task>
 			counter.decrementAndGet();
 		return element;
 	}
+	
+	public T poll()
+	{
+		T element = queue.poll();
+		if (element != null)
+			counter.decrementAndGet();
+		return element;
+	}
 
 	public boolean thresholdReached(int threshold,int timeThreshold)
 	{

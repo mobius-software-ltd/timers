@@ -30,39 +30,78 @@ public class Worker  implements Runnable
 	private static final long TASK_POLL_INTERVAL = 100L;
 	
 	private CountableQueue<Task> queue;
-	private boolean isRunning;
+	private CountableQueue<Task> localQueue;
 	
-	public Worker(CountableQueue<Task> queue, boolean isRunning)
+	private boolean isRunning;
+	private Long taskPoolInterval;
+	
+	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning)
 	{
 		this.queue = queue;
+		this.localQueue = localQueue;
 		this.isRunning = isRunning;
+		this.taskPoolInterval = TASK_POLL_INTERVAL;
 	}
 
+	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval)
+	{
+		this.queue = queue;
+		this.localQueue = localQueue;
+		this.isRunning = isRunning;
+		this.taskPoolInterval = taskPollInterval;
+	}
+	
 	@Override
 	public void run()
 	{
-		try
+		while (isRunning)
 		{
-			while (isRunning)
+			try
 			{
-				Task task = this.queue.poll(TASK_POLL_INTERVAL, TimeUnit.MILLISECONDS);
+				Task task = this.localQueue.poll();
 				if (task != null)
 				{
-					task.execute();
+					try
+					{
+						task.execute();
+					}					
+					catch (Exception e)
+					{
+						logger.error("WORKER THREAD CAUGHT UNEXPECTED EXCEPTION!!! " + e.getClass().getSimpleName() + "," + e.getMessage(), e);			
+					}
+				}
+				
+				if(task==null)
+					task = this.queue.poll(this.taskPoolInterval, TimeUnit.MILLISECONDS);
+				else
+					task = this.queue.poll();
+				
+				if (task != null)
+				{
+					try
+					{
+						task.execute();				
+					}
+					catch (Exception e)
+					{
+						logger.error("WORKER THREAD CAUGHT UNEXPECTED EXCEPTION!!! " + e.getClass().getSimpleName() + "," + e.getMessage(), e);			
+					}
 				}
 			}
-		}
-		catch (InterruptedException e)
-		{			
-		}
-		catch (Exception e)
-		{
-			logger.error("WORKER THREAD CAUGHT UNEXPECTED EXCEPTION!!! " + e.getClass().getSimpleName() + "," + e.getMessage(), e);			
-		}
+			catch (InterruptedException e)
+			{
+				//lets try again
+			}
+		}			
 	}
 
 	public void stop()
 	{
 		this.isRunning = false;
+	}
+	
+	public CountableQueue<Task> getLocalQueue()
+	{
+		return localQueue;
 	}
 }
