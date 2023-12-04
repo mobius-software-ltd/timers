@@ -27,22 +27,12 @@ public class Worker  implements Runnable
 {
 	private static Logger logger = LogManager.getLogger(Worker.class);
 
-	private static final long TASK_POLL_INTERVAL = 100L;
-	
 	private CountableQueue<Task> queue;
 	private CountableQueue<Task> localQueue;
 	
 	private boolean isRunning;
 	private Long taskPoolInterval;
 	
-	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning)
-	{
-		this.queue = queue;
-		this.localQueue = localQueue;
-		this.isRunning = isRunning;
-		this.taskPoolInterval = TASK_POLL_INTERVAL;
-	}
-
 	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval)
 	{
 		this.queue = queue;

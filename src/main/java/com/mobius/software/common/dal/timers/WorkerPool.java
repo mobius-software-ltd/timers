@@ -60,7 +60,7 @@ public class WorkerPool
 		workers = new ArrayList<Worker>();
 		for(int i=0;i<workersNumber;i++)
 		{
-			workers.add(new Worker(queue, new CountableQueue<Task>(), true));
+			workers.add(new Worker(queue, new CountableQueue<Task>(), true, taskPoolInterval));
 			workersExecutors.execute(workers.get(i));
 		}
 	}
