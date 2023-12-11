@@ -7,6 +7,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /*
  * Mobius Software LTD
  * Copyright 2019 - 2023, Mobius Software LTD and individual contributors
@@ -28,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 
 public class WorkerPool 
 {
+	private static Logger logger = LogManager.getLogger(Worker.class);		
+
 	private CountableQueue<Task> queue;
 	private PeriodicQueuedTasks<Timer> periodicQueue;
 	
@@ -41,7 +46,9 @@ public class WorkerPool
 	public WorkerPool()
 	{
 		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);
+		
+		logger.info("Starting workerpool with interval " + taskPoolInterval);
 	}
 	
 	public WorkerPool(long taskPoolInterval)
@@ -49,6 +56,8 @@ public class WorkerPool
 		this.taskPoolInterval = taskPoolInterval;
 		queue=new CountableQueue<Task>();
 		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
+		
+		logger.info("Starting workerpool with interval " + taskPoolInterval);
 	}
 	
 	public WorkerPool(long taskPoolInterval, Boolean debugLog)
@@ -57,6 +66,8 @@ public class WorkerPool
 		this.debugLog = debugLog;
 		queue=new CountableQueue<Task>();
 		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
+		
+		logger.info("Starting workerpool with interval " + taskPoolInterval);
 	}
 
 	public void start(int workersNumber)
