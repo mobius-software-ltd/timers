@@ -35,19 +35,28 @@ public class WorkerPool
 	private ExecutorService workersExecutors;
 	
 	private long taskPoolInterval = 100L;
+	private Boolean debugLog = false;
 	private List<Worker> workers;
 	
 	public WorkerPool()
 	{
 		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, queue);		
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
 	}
 	
 	public WorkerPool(long taskPoolInterval)
 	{
 		this.taskPoolInterval = taskPoolInterval;
 		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, queue);		
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
+	}
+	
+	public WorkerPool(long taskPoolInterval, Boolean debugLog)
+	{
+		this.taskPoolInterval = taskPoolInterval;
+		this.debugLog = debugLog;
+		queue=new CountableQueue<Task>();
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
 	}
 
 	public void start(int workersNumber)
@@ -60,7 +69,7 @@ public class WorkerPool
 		workers = new ArrayList<Worker>();
 		for(int i=0;i<workersNumber;i++)
 		{
-			workers.add(new Worker(queue, new CountableQueue<Task>(), true, taskPoolInterval));
+			workers.add(new Worker(queue, new CountableQueue<Task>(), true, taskPoolInterval, debugLog));
 			workersExecutors.execute(workers.get(i));
 		}
 	}

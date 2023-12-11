@@ -21,19 +21,26 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class PeriodicQueuedTasks<T extends Timer>
 {
+	private static Logger logger = LogManager.getLogger(PeriodicQueuedTasks.class);
+
 	private ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>> queues = new ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>>();
-	private CountableQueue<Task> mainQueue;
+	private WorkerPool workerPool;
 	private ConcurrentLinkedQueue<T> passAwayQueue = new ConcurrentLinkedQueue<T>();
 
 	private long period;
 	private AtomicLong previousRun = new AtomicLong(0);
-
-	public PeriodicQueuedTasks(long period, CountableQueue<Task> mainQueue)
+	private Boolean debugLog;
+	
+	public PeriodicQueuedTasks(long period, WorkerPool workerPool, Boolean debugLog)
 	{
-		this.mainQueue = mainQueue;
+		this.workerPool = workerPool;
 		this.period = period;
+		this.debugLog = debugLog;
 	}
 
 	public long getPeriod()
@@ -92,15 +99,46 @@ public class PeriodicQueuedTasks<T extends Timer>
 				while ((current = queue.poll()) != null)
 				{
 					if (current.getRealTimestamp() < (periodTime + period))
-						mainQueue.offerFirst(current);
+					{
+						if(current.getQueueIndex()!=null)
+						{
+							if(debugLog)
+								logger.debug("Adding periodic task to local queue " + current.getQueueIndex() + " for execution of type " + current.getClass().getCanonicalName());
+							
+							workerPool.getLocalQueue(current.getQueueIndex()).offerFirst(current);
+						}
+						else
+						{
+							if(debugLog)
+								logger.debug("Adding periodic task to queue for execution of type " + current.getClass().getCanonicalName());
+							
+							workerPool.getQueue().offerFirst(current);
+						}
+					}
 				}
 			}
-		} while (periodTime.longValue() < originalTime.longValue());
+		} 
+		while (periodTime.longValue() < originalTime.longValue());
 
 		while ((current = passAwayQueue.poll()) != null)
 		{
 			if (current.getRealTimestamp() < (periodTime + period))
-				mainQueue.offerFirst(current);
+			{
+				if(current.getQueueIndex()!=null)
+				{
+					if(debugLog)
+						logger.debug("Adding periodic task to local queue " + current.getQueueIndex() + " for execution of type " + current.getClass().getCanonicalName());
+					
+					workerPool.getLocalQueue(current.getQueueIndex()).offerFirst(current);
+				}
+				else
+				{
+					if(debugLog)
+						logger.debug("Adding periodic task to queue for execution of type " + current.getClass().getCanonicalName());
+					
+					workerPool.getQueue().offerFirst(current);
+				}
+			}
 		}
 	}
 

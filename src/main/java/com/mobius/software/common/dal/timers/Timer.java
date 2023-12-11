@@ -22,4 +22,9 @@ public interface Timer extends Task
 	Long getRealTimestamp();
 
 	void stop();
+	
+	default Integer getQueueIndex()
+	{
+		return null;
+	}
 }
