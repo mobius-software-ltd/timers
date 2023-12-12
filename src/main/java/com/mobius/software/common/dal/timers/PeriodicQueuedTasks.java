@@ -56,9 +56,13 @@ public class PeriodicQueuedTasks<T extends Timer>
 		Long periodTime = timestamp - timestamp % period;
 		ConcurrentLinkedQueue<T> queue;
 		Long previousRunTime = previousRun.get();
-		logger.debug("storing task {} with timestamp {} in period Time {}", task, timestamp, periodTime);
+		if(logger.isDebugEnabled())
+			logger.debug("storing task {} with timestamp {} in period Time {}", task, timestamp, periodTime);
+			
 		if (previousRunTime >= periodTime) {
-			logger.debug("storing task {} in passAway queue as previous Run Time {} is higher", task, previousRunTime);
+			if(logger.isDebugEnabled())
+				logger.debug("storing task {} in passAway queue as previous Run Time {} is higher", task, previousRunTime);
+
 			passAwayQueue.offer(task);
 		}
 		else
@@ -71,16 +75,21 @@ public class PeriodicQueuedTasks<T extends Timer>
 						periodTime, queue);
 				if (oldQueue != null)
 					queue = oldQueue;
-				logger.debug("task {} creating in new queue {} for period {}", task, queue.hashCode(), periodTime);
+				if(logger.isDebugEnabled())
+					logger.debug("task {} creating in new queue {} for period {}", task, queue.hashCode(), periodTime);
 			}
 
 			if (previousRun.get() >= periodTime)
 			{
-				logger.debug("storing task {} in passAway queue and removing periodTime as previous Run Time {} is higher", task, previousRunTime);
+				if(logger.isDebugEnabled())
+					logger.debug("storing task {} in passAway queue and removing periodTime as previous Run Time {} is higher", task, previousRunTime);
+
 				passAwayQueue.offer(task);
 				queues.remove(periodTime);				
 			} else {
-				logger.debug("storing task {} in queue {} for period {}", task, queue.hashCode(), periodTime);
+				if(logger.isDebugEnabled())
+					logger.debug("storing task {} in queue {} for period {}", task, queue.hashCode(), periodTime);
+					
 				queue.offer(task);
 			}
 		}
