@@ -1,5 +1,4 @@
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import org.junit.After;
 import org.junit.Before;
@@ -15,7 +14,7 @@ public class PeriodicQueuedTasksTest {
 
     @Before
     public void setUp() {
-        workerPool = new WorkerPool(10, Boolean.TRUE);        
+        workerPool = new WorkerPool(10);        
         workerPool.start(1);
         tasks = workerPool.getPeriodicQueue();
     }
@@ -28,29 +27,30 @@ public class PeriodicQueuedTasksTest {
 
     @Test
     public void testStoreTimeoutAndPeriod() throws InterruptedException {
-        Timer task = new TimerTask(500, 500);
+        Timer task = new TimerTask(workerPool, 500, 500);
         tasks.store(task.getRealTimestamp(), task);
         assertEquals(1, tasks.getQueues().size());
-        assertEquals(1, tasks.getQueues().get(1000L).size());
-        assertEquals(task, tasks.getQueues().get(1000L).peek());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(250);
+        assertEquals(1, tasks.getQueues().size());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        //1st execution
         Thread.sleep(300);
         assertEquals(1, tasks.getQueues().size());
-        assertEquals(1, tasks.getQueues().get(1000L).size());
-        assertEquals(task, tasks.getQueues().get(1000L).peek());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(250);
+        assertEquals(1, tasks.getQueues().size());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());        
+        task.stop();
+        assertEquals(1, tasks.getQueues().size());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());
         Thread.sleep(300);
         assertEquals(0, tasks.getQueues().size());
-        assertEquals(0, tasks.getQueues().get(1000L).size());
-        assertNull(tasks.getQueues().get(1000L).peek());
+        assertEquals(0, tasks.getQueues().values().size());
     }
-
-    // @Test
-    // public void testExecutePreviousPool() {
-    //     Timer task1 = new Timer();
-    //     Timer task2 = new Timer();
-    //     tasks.store(1000, task1);
-    //     tasks.store(2000, task2);
-    //     tasks.executePreviousPool(3000);
-    //     assertEquals(1, workerPool.getQueue().size());
-    //     assertEquals(task1, workerPool.getQueue().peek());
-    // }
 }

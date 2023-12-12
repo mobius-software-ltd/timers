@@ -31,16 +31,14 @@ public class Worker  implements Runnable
 	private CountableQueue<Task> localQueue;
 	
 	private boolean isRunning;
-	private Boolean inDebug;
 	private Long taskPoolInterval;
 	
-	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval, Boolean inDebug)
+	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval)
 	{
 		this.queue = queue;
 		this.localQueue = localQueue;
 		this.isRunning = isRunning;
 		this.taskPoolInterval = taskPollInterval;		
-		this.inDebug = inDebug;
 	}
 	
 	@Override
@@ -53,8 +51,8 @@ public class Worker  implements Runnable
 				Task task = this.localQueue.poll();
 				if (task != null)
 				{
-					if(inDebug)
-						logger.debug("Executing local task of type " + task.getClass().getCanonicalName());
+					if(logger.isDebugEnabled())
+						logger.debug("Executing local task {}", task);
 
 					try
 					{
@@ -65,8 +63,8 @@ public class Worker  implements Runnable
 						logger.error("WORKER THREAD CAUGHT UNEXPECTED EXCEPTION!!! " + e.getClass().getSimpleName() + "," + e.getMessage(), e);			
 					}
 					
-					if(inDebug)
-						logger.debug("Done executing local task of type " + task.getClass().getCanonicalName());
+					if(logger.isDebugEnabled())
+						logger.debug("Done executing local task {}", task);
 				}
 				
 				if(task==null)
@@ -76,8 +74,8 @@ public class Worker  implements Runnable
 				
 				if (task != null)
 				{
-					if(inDebug)
-						logger.debug("Executing task of type " + task.getClass().getCanonicalName());
+					if(logger.isDebugEnabled())
+						logger.debug("Executing task {}", task);
 
 					try
 					{
@@ -88,11 +86,11 @@ public class Worker  implements Runnable
 						logger.error("WORKER THREAD CAUGHT UNEXPECTED EXCEPTION!!! " + e.getClass().getSimpleName() + "," + e.getMessage(), e);			
 					}
 					
-					if(inDebug)
-						logger.debug("Done executing task of type " + task.getClass().getCanonicalName());					
+					if(logger.isDebugEnabled())
+						logger.debug("Done executing task {}", task);					
 				}
-				else if(inDebug)
-					logger.debug("No tasks found for queue , retrying");
+				else if(logger.isTraceEnabled())
+					logger.trace("No tasks found for queue , retrying");
 			}
 			catch (InterruptedException e)
 			{

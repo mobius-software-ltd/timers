@@ -39,14 +39,13 @@ public class WorkerPool
 	private ScheduledExecutorService timersExecutor;
 	private ExecutorService workersExecutors;
 	
-	private long taskPoolInterval = 100L;
-	private Boolean debugLog = false;
+	private long taskPoolInterval = 100L;	
 	private List<Worker> workers;
 	
 	public WorkerPool()
 	{
 		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this);
 		
 		logger.info("Starting workerpool with interval " + taskPoolInterval);
 	}
@@ -55,20 +54,10 @@ public class WorkerPool
 	{
 		this.taskPoolInterval = taskPoolInterval;
 		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this);		
 		
 		logger.info("Starting workerpool with interval " + taskPoolInterval);
-	}
-	
-	public WorkerPool(long taskPoolInterval, Boolean debugLog)
-	{
-		this.taskPoolInterval = taskPoolInterval;
-		this.debugLog = debugLog;
-		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, debugLog);		
-		
-		logger.info("Starting workerpool with interval " + taskPoolInterval);
-	}
+	}	
 
 	public void start(int workersNumber)
 	{
@@ -80,7 +69,7 @@ public class WorkerPool
 		workers = new ArrayList<Worker>();
 		for(int i=0;i<workersNumber;i++)
 		{
-			workers.add(new Worker(queue, new CountableQueue<Task>(), true, taskPoolInterval, debugLog));
+			workers.add(new Worker(queue, new CountableQueue<Task>(), true, taskPoolInterval));
 			workersExecutors.execute(workers.get(i));
 		}
 	}
@@ -103,6 +92,7 @@ public class WorkerPool
 
 	public CountableQueue<Task> getLocalQueue(int index) 
 	{
+		// logger.debug("workers " + workers + " workers size " + workers.size() + " index " + index);
 		if(workers == null || index>=workers.size())
 			return null;
 		

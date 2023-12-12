@@ -33,14 +33,12 @@ public class PeriodicQueuedTasks<T extends Timer>
 	private ConcurrentLinkedQueue<T> passAwayQueue = new ConcurrentLinkedQueue<T>();
 
 	private long period;
-	private AtomicLong previousRun = new AtomicLong(0);
-	private Boolean debugLog;
+	private AtomicLong previousRun = new AtomicLong(0);	
 	
-	public PeriodicQueuedTasks(long period, WorkerPool workerPool, Boolean debugLog)
+	public PeriodicQueuedTasks(long period, WorkerPool workerPool)
 	{
 		this.workerPool = workerPool;
-		this.period = period;
-		this.debugLog = debugLog;
+		this.period = period;		
 	}
 
 	public long getPeriod()
@@ -57,8 +55,12 @@ public class PeriodicQueuedTasks<T extends Timer>
 	{
 		Long periodTime = timestamp - timestamp % period;
 		ConcurrentLinkedQueue<T> queue;
-		if (previousRun.get() >= periodTime)
+		Long previousRunTime = previousRun.get();
+		logger.debug("storing task {} with timestamp {} in period Time {}", task, timestamp, periodTime);
+		if (previousRunTime >= periodTime) {
+			logger.debug("storing task {} in passAway queue as previous Run Time {} is higher", task, previousRunTime);
 			passAwayQueue.offer(task);
+		}
 		else
 		{
 			queue = queues.get(periodTime);
@@ -69,14 +71,18 @@ public class PeriodicQueuedTasks<T extends Timer>
 						periodTime, queue);
 				if (oldQueue != null)
 					queue = oldQueue;
+				logger.debug("task {} creating in new queue {} for period {}", task, queue.hashCode(), periodTime);
 			}
 
 			if (previousRun.get() >= periodTime)
 			{
+				logger.debug("storing task {} in passAway queue and removing periodTime as previous Run Time {} is higher", task, previousRunTime);
 				passAwayQueue.offer(task);
-				queues.remove(periodTime);
-			} else
+				queues.remove(periodTime);				
+			} else {
+				logger.debug("storing task {} in queue {} for period {}", task, queue.hashCode(), periodTime);
 				queue.offer(task);
+			}
 		}
 	}
 
@@ -102,15 +108,21 @@ public class PeriodicQueuedTasks<T extends Timer>
 					{
 						if(current.getQueueIndex()!=null)
 						{
-							if(debugLog)
-								logger.debug("Adding periodic task to local queue " + current.getQueueIndex() + " for execution of type " + current.getClass().getCanonicalName());
+							if(logger.isDebugEnabled())
+								logger.debug("Adding periodic task to local queue {} for execution of type {}", current.getQueueIndex(), current.getClass().getCanonicalName());								
 							
-							workerPool.getLocalQueue(current.getQueueIndex()).offerFirst(current);
+							CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
+							
+							if(logger.isDebugEnabled())
+								logger.debug("Adding periodic task to local queue {} for execution of type {}", countableQueue.hashCode(), current.getClass().getCanonicalName());
+
+							countableQueue.offerFirst(current);							
+							
 						}
 						else
 						{
-							if(debugLog)
-								logger.debug("Adding periodic task to queue for execution of type " + current.getClass().getCanonicalName());
+							if(logger.isDebugEnabled())
+								logger.debug("Adding periodic task to queue for execution of type {}", current.getClass().getCanonicalName());
 							
 							workerPool.getQueue().offerFirst(current);
 						}
@@ -126,15 +138,20 @@ public class PeriodicQueuedTasks<T extends Timer>
 			{
 				if(current.getQueueIndex()!=null)
 				{
-					if(debugLog)
-						logger.debug("Adding periodic task to local queue " + current.getQueueIndex() + " for execution of type " + current.getClass().getCanonicalName());
+					if(logger.isDebugEnabled())
+						logger.debug("Adding periodic task to local queue {} for execution of type {}", current.getQueueIndex(), current.getClass().getCanonicalName());								
 					
-					workerPool.getLocalQueue(current.getQueueIndex()).offerFirst(current);
+					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
+					
+					if(logger.isDebugEnabled())
+						logger.debug("Adding periodic task to local queue {} for execution of type {}", countableQueue.hashCode(), current.getClass().getCanonicalName());
+					
+					countableQueue.offerFirst(current);	
 				}
 				else
 				{
-					if(debugLog)
-						logger.debug("Adding periodic task to queue for execution of type " + current.getClass().getCanonicalName());
+					if(logger.isDebugEnabled())
+						logger.debug("Adding periodic task to queue for execution of type {}", current.getClass().getCanonicalName());
 					
 					workerPool.getQueue().offerFirst(current);
 				}
