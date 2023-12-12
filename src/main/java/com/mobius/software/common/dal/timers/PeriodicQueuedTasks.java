@@ -61,9 +61,10 @@ public class PeriodicQueuedTasks<T extends Timer>
 			
 		if (previousRunTime >= periodTime) {
 			if(logger.isDebugEnabled())
-				logger.debug("storing task {} in passAway queue as previous Run Time {} is higher", task, previousRunTime);
+				logger.debug("storing task {} in passAway queue and removing periodTime {} as previous Run Time {} is higher", task, periodTime, previousRunTime);
 
 			passAwayQueue.offer(task);
+			queues.remove(periodTime);	
 		}
 		else
 		{
@@ -78,11 +79,12 @@ public class PeriodicQueuedTasks<T extends Timer>
 				if(logger.isDebugEnabled())
 					logger.debug("task {} creating in new queue {} for period {}", task, queue.hashCode(), periodTime);
 			}
-
-			if (previousRun.get() >= periodTime)
+			
+			previousRunTime = previousRun.get();
+			if (previousRunTime >= periodTime)
 			{
 				if(logger.isDebugEnabled())
-					logger.debug("storing task {} in passAway queue and removing periodTime as previous Run Time {} is higher", task, previousRunTime);
+					logger.debug("storing task {} in passAway queue and removing periodTime {} as previous Run Time {} is higher", task, periodTime, previousRunTime);
 
 				passAwayQueue.offer(task);
 				queues.remove(periodTime);				
@@ -103,10 +105,18 @@ public class PeriodicQueuedTasks<T extends Timer>
 		ConcurrentLinkedQueue<T> queue = null;
 		T current;
 
+		// if(logger.isDebugEnabled())
+		// 	logger.debug("periodTime {} , originalTime {}, period {}", periodTime, originalTime, period);								
+
 		do
 		{
-			if (!previousRun.compareAndSet(0, periodTime))
+			if (!previousRun.compareAndSet(0, periodTime)) {
+				// if(logger.isDebugEnabled())
+				// 	logger.debug("Updating periodTime {} for previousRun {} with additional period {}", periodTime, previousRun.get(), period);								
 				periodTime = previousRun.addAndGet(period);
+				// if(logger.isDebugEnabled())
+				// 	logger.debug("Updated periodTime {} for previousRun {} with additional period {}", periodTime, previousRun.get(), period);								
+			}
 
 			queue = queues.remove(periodTime);
 			if (queue != null)
@@ -118,12 +128,12 @@ public class PeriodicQueuedTasks<T extends Timer>
 						if(current.getQueueIndex()!=null)
 						{
 							if(logger.isDebugEnabled())
-								logger.debug("Adding periodic task to local queue {} for execution of type {}", current.getQueueIndex(), current.getClass().getCanonicalName());								
+								logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, current.getQueueIndex(), current.getRealTimestamp());								
 							
 							CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
 							
 							if(logger.isDebugEnabled())
-								logger.debug("Adding periodic task to local queue {} for execution of type {}", countableQueue.hashCode(), current.getClass().getCanonicalName());
+								logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
 
 							countableQueue.offerFirst(current);							
 							
@@ -131,7 +141,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 						else
 						{
 							if(logger.isDebugEnabled())
-								logger.debug("Adding periodic task to queue for execution of type {}", current.getClass().getCanonicalName());
+								logger.debug("Adding periodic task {} from queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
 							
 							workerPool.getQueue().offerFirst(current);
 						}
@@ -139,7 +149,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 				}
 			}
 		} 
-		while (periodTime.longValue() < originalTime.longValue());
+		while (periodTime.longValue() <= originalTime.longValue());
 
 		while ((current = passAwayQueue.poll()) != null)
 		{
@@ -148,19 +158,19 @@ public class PeriodicQueuedTasks<T extends Timer>
 				if(current.getQueueIndex()!=null)
 				{
 					if(logger.isDebugEnabled())
-						logger.debug("Adding periodic task to local queue {} for execution of type {}", current.getQueueIndex(), current.getClass().getCanonicalName());								
+						logger.debug("Adding periodic task {} from passaway queue to workerpool local queue {} for execution at task real timestamp {}", current, current.getQueueIndex(), current.getRealTimestamp());								
 					
 					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
 					
 					if(logger.isDebugEnabled())
-						logger.debug("Adding periodic task to local queue {} for execution of type {}", countableQueue.hashCode(), current.getClass().getCanonicalName());
+						logger.debug("Adding periodic task {} from passaway queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
 					
 					countableQueue.offerFirst(current);	
 				}
 				else
 				{
 					if(logger.isDebugEnabled())
-						logger.debug("Adding periodic task to queue for execution of type {}", current.getClass().getCanonicalName());
+						logger.debug("Adding periodic task {} from passaway queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
 					
 					workerPool.getQueue().offerFirst(current);
 				}
