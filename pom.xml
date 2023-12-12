@@ -1,10 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<groupId>com.mobius-software</groupId>
 		<artifactId>mobius-public-parent</artifactId>
 		<version>1.0.9</version>
 	</parent>
-	
+
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>mobius-timers</artifactId>
 	<version>1.0.0-13-SNAPSHOT</version>
@@ -15,11 +17,15 @@
 	<url>http://www.mobius-software.com</url>
 
 	<properties>
-		<log4j2.version>2.19.0</log4j2.version>	
+		<log4j2.version>2.19.0</log4j2.version>
+		<junit.version>4.12</junit.version>
+		<junit.jupiter.version>5.10.1</junit.jupiter.version>
+		<junit.vintage.version>${junit.version}.0</junit.vintage.version>
+		<junit.platform.version>1.0.0</junit.platform.version>
 		<compiler.plugin.version>3.8.1</compiler.plugin.version>
-		<compile.source>1.8</compile.source>		
+		<compile.source>1.8</compile.source>
 	</properties>
-	
+
 	<licenses>
 		<license>
 			<name>AGPL 3.0</name>
@@ -35,14 +41,51 @@
 			<artifactId>log4j-core</artifactId>
 			<version>${log4j2.version}</version>
 		</dependency>
-				
+
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
 			<version>${log4j2.version}</version>
 		</dependency>
-	</dependencies>		
-	
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Pour executer des tests ecrits avec un IDE
+            qui ne supporte que les versions precedentes de JUnit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-runner</artifactId>
+			<version>${junit.platform.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.jupiter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
+			<version>${junit.vintage.version}</version>
+		</dependency>
+	</dependencies>
+
 	<organization>
 		<name>Mobius Software</name>
 		<url>http://www.mobius-software.com</url>
@@ -51,9 +94,9 @@
 	<scm>
 		<url>https://github.com/mobius-software-ltd/timers</url>
 		<connection>scm:git:git://github.com:mobius-software-ltd/timers.git</connection>
-		<developerConnection>scm:git:git@github.com:mobius-software-ltd/timers.git</developerConnection>		
-	  <tag>HEAD</tag>
-  </scm>
+		<developerConnection>scm:git:git@github.com:mobius-software-ltd/timers.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 
 	<developers>
 		<developer>
@@ -68,7 +111,7 @@
 			<timezone>+2</timezone>
 		</developer>
 	</developers>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -85,9 +128,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M6</version>				
+				<version>3.0.0-M6</version>
 				<configuration>
-				    <skipTests>false</skipTests>					
+					<skipTests>false</skipTests>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -194,7 +237,7 @@
 			</build>
 		</profile>
 	</profiles>
-	
+
 	<distributionManagement>
 		<repository>
 			<id>mobius-public-releases-repository</id>
