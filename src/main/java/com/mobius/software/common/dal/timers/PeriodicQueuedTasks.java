@@ -111,11 +111,12 @@ public class PeriodicQueuedTasks<T extends Timer>
 		do
 		{
 			if (!previousRun.compareAndSet(0, periodTime)) {
-				// if(logger.isDebugEnabled())
-				// 	logger.debug("Updating periodTime {} for previousRun {} with additional period {}", periodTime, previousRun.get(), period);								
-				periodTime = previousRun.addAndGet(period);
-				// if(logger.isDebugEnabled())
-				// 	logger.debug("Updated periodTime {} for previousRun {} with additional period {}", periodTime, previousRun.get(), period);								
+				if(previousRun.get()+period > System.currentTimeMillis()) {					
+					if(logger.isDebugEnabled())
+						logger.debug("Lol, we are processing the future, updating periodTime {} for previousRun {}, originalTime {} with additional period {}", periodTime, previousRun.get(), originalTime, period);
+				}
+				
+				periodTime = previousRun.addAndGet(period);				
 			} else if(logger.isDebugEnabled()) {
 				logger.debug("Updated previousRunTime with new periodTime value {} as it was 0. For information purposes: timestamp was {}, originalTime was {}, period was {}", periodTime, timestamp, originalTime, period);												
 			}
