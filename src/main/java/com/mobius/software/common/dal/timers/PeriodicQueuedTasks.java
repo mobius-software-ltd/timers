@@ -100,7 +100,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 	public void executePreviousPool(long timestamp)
 	{
 		Long originalTime = (timestamp - timestamp % period - period);
-		Long periodTime = originalTime;
+		Long periodTime = new Long(originalTime);
 
 		ConcurrentLinkedQueue<T> queue = null;
 		T current;
