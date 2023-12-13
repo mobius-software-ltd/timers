@@ -113,7 +113,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 			if (!previousRun.compareAndSet(0, periodTime)) {
 				if(previousRun.get()+period > System.currentTimeMillis()) {					
 					if(logger.isDebugEnabled())
-						logger.debug("Lol, we are processing the future, updating periodTime {} for previousRun {}, originalTime {} with additional period {}", periodTime, previousRun.get(), originalTime, period);
+						logger.debug("Lol, we are processing the future, updating periodTime {} for previousRun {}, originalTime {} with additional period {} at timestamp {}", periodTime, previousRun.get(), originalTime, period, timestamp);
 				}
 				
 				periodTime = previousRun.addAndGet(period);				
@@ -137,7 +137,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 									current, 
 									current.getQueueIndex(), 
 									current.getRealTimestamp());								
-								logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}", previousRun.get(), periodTime, originalTime, period);									
+								logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}, timestamp {}", previousRun.get(), periodTime, originalTime, period, timestamp);									
 							}
 							
 							CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
@@ -174,7 +174,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 							current, 
 							current.getQueueIndex(), 
 							current.getRealTimestamp());								
-						logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}", previousRun.get(), periodTime, originalTime, period);									
+						logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}, timestamp {}", previousRun.get(), periodTime, originalTime, period, timestamp);									
 					}
 					
 					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
