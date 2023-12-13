@@ -67,7 +67,7 @@ public class WorkerPool
 		}
 		
 		timersExecutor = Executors.newScheduledThreadPool(1);
-		timersExecutor.scheduleAtFixedRate(new TimersRunner(periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
+		timersExecutor.scheduleWithFixedDelay(new TimersRunner(periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
 		
 		workersExecutors = Executors.newFixedThreadPool(workersNumber);
 		

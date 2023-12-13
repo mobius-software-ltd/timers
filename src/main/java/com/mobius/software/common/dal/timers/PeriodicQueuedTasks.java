@@ -38,7 +38,11 @@ public class PeriodicQueuedTasks<T extends Timer>
 	public PeriodicQueuedTasks(long period, WorkerPool workerPool)
 	{
 		this.workerPool = workerPool;
-		this.period = period;		
+		this.period = period;
+		
+		Long originalTime = System.currentTimeMillis();
+		originalTime = (originalTime - originalTime % period - period);
+		this.previousRun.set(originalTime);
 	}
 
 	public long getPeriod()
@@ -104,23 +108,17 @@ public class PeriodicQueuedTasks<T extends Timer>
 
 		ConcurrentLinkedQueue<T> queue = null;
 		T current;
-
+		
 		// if(logger.isDebugEnabled())
 		// 	logger.debug("periodTime {} , originalTime {}, period {}", periodTime, originalTime, period);								
 
 		do
 		{
-			if (!previousRun.compareAndSet(0, periodTime)) {
-				if(previousRun.get()+period > System.currentTimeMillis()) {					
-					if(logger.isDebugEnabled())
-						logger.debug("Lol, we are processing the future, updating periodTime {} for previousRun {}, originalTime {} with additional period {} at timestamp {}", periodTime, previousRun.get(), originalTime, period, timestamp);
-				}
-				
-				periodTime = previousRun.addAndGet(period);				
-			} else if(logger.isDebugEnabled()) {
-				logger.debug("Updated previousRunTime with new periodTime value {} as it was 0. For information purposes: timestamp was {}, originalTime was {}, period was {}", periodTime, timestamp, originalTime, period);												
+			if(previousRun.addAndGet(period) > System.currentTimeMillis()) {					
+				previousRun.addAndGet(0 - period);
+				return;
 			}
-
+			
 			queue = queues.remove(periodTime);
 			if (queue != null)
 			{
