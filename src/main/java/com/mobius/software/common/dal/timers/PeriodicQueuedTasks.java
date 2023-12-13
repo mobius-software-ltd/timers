@@ -116,6 +116,8 @@ public class PeriodicQueuedTasks<T extends Timer>
 				periodTime = previousRun.addAndGet(period);
 				// if(logger.isDebugEnabled())
 				// 	logger.debug("Updated periodTime {} for previousRun {} with additional period {}", periodTime, previousRun.get(), period);								
+			} else if(logger.isDebugEnabled()) {
+				logger.debug("Updated previousRunTime with new periodTime value {} as it was 0. For information purposes: timestamp was {}, originalTime was {}, period was {}", periodTime, timestamp, originalTime, period);												
 			}
 
 			queue = queues.remove(periodTime);
@@ -127,8 +129,15 @@ public class PeriodicQueuedTasks<T extends Timer>
 					{
 						if(current.getQueueIndex()!=null)
 						{
-							if(logger.isDebugEnabled())
-								logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, current.getQueueIndex(), current.getRealTimestamp());								
+							if(logger.isDebugEnabled()) {
+								logger.debug("Adding periodic task {} from queue " +
+									" to workerpool local queue {} for execution at task " +
+									" real timestamp {}", 
+									current, 
+									current.getQueueIndex(), 
+									current.getRealTimestamp());								
+								logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}", previousRun.get(), periodTime, originalTime, period);									
+							}
 							
 							CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
 							
@@ -157,8 +166,15 @@ public class PeriodicQueuedTasks<T extends Timer>
 			{
 				if(current.getQueueIndex()!=null)
 				{
-					if(logger.isDebugEnabled())
-						logger.debug("Adding periodic task {} from passaway queue to workerpool local queue {} for execution at task real timestamp {}", current, current.getQueueIndex(), current.getRealTimestamp());								
+					if(logger.isDebugEnabled()) {
+						logger.debug("Adding periodic task {} from passaway queue " +
+							" to workerpool local queue {} for execution at task " +
+							" real timestamp {}", 
+							current, 
+							current.getQueueIndex(), 
+							current.getRealTimestamp());								
+						logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}", previousRun.get(), periodTime, originalTime, period);									
+					}
 					
 					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
 					
