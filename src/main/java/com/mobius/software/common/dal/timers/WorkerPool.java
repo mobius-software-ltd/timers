@@ -61,6 +61,11 @@ public class WorkerPool
 
 	public void start(int workersNumber)
 	{
+		if(timersExecutor == null) {
+			logger.warn("The worker pool is already started, can not start it second time!!!!");
+			return;
+		}
+		
 		timersExecutor = Executors.newScheduledThreadPool(1);
 		timersExecutor.scheduleAtFixedRate(new TimersRunner(periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
 		
