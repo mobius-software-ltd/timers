@@ -81,6 +81,11 @@ public class WorkerPool
 	
 	public void stop()
 	{
+		if(timersExecutor==null) {
+			logger.warn("The worker pool is already stopped or not started, can not stop it second time!!!!");
+			return;
+		}
+		
 		workersExecutors.shutdown();
 		workersExecutors =  null;
 		
