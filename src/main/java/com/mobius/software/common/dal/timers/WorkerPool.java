@@ -61,7 +61,7 @@ public class WorkerPool
 
 	public void start(int workersNumber)
 	{
-		if(timersExecutor == null) {
+		if(timersExecutor != null) {
 			logger.warn("The worker pool is already started, can not start it second time!!!!");
 			return;
 		}

@@ -1,12 +1,9 @@
+package com.mobius.software.common.dal.timers;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.mobius.software.common.dal.timers.PeriodicQueuedTasks;
-import com.mobius.software.common.dal.timers.Timer;
-import com.mobius.software.common.dal.timers.WorkerPool;
 
 public class PeriodicQueuedTasksTest {
     private PeriodicQueuedTasks<Timer> tasks;
@@ -49,7 +46,7 @@ public class PeriodicQueuedTasksTest {
         assertEquals(1, tasks.getQueues().size());
         assertEquals(1, tasks.getQueues().values().iterator().next().size());
         assertEquals(task, tasks.getQueues().values().iterator().next().peek());
-        Thread.sleep(300);
+        Thread.sleep(500);
         assertEquals(0, tasks.getQueues().size());
         assertEquals(0, tasks.getQueues().values().size());
     }

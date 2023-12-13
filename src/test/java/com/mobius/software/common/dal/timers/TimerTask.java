@@ -1,10 +1,8 @@
+package com.mobius.software.common.dal.timers;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.mobius.software.common.dal.timers.Timer;
-import com.mobius.software.common.dal.timers.WorkerPool;
 
 public class TimerTask implements Timer {
     private static Logger logger = LogManager.getLogger(TimerTask.class);
