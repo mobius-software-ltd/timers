@@ -107,10 +107,45 @@ public class PeriodicQueuedTasks<T extends Timer>
 
 		ConcurrentLinkedQueue<T> queue = null;
 		T current;
+		while ((current = passAwayQueue.poll()) != null)
+		{
+			//we are in pass away queue anway , lets execute everything that should be executed even in current cycle
+			if (current.getRealTimestamp() < (System.currentTimeMillis() + period))
+			{
+				if(current.getQueueIndex()!=null)
+				{
+					if(logger.isDebugEnabled()) {
+						logger.debug("Adding periodic task {} from passaway queue " +
+							" to workerpool local queue {} for execution at task " +
+							" real timestamp {}", 
+							current, 
+							current.getQueueIndex(), 
+							current.getRealTimestamp());								
+						logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}, timestamp {}", previousRun.get(), periodTime, originalTime, period, timestamp);									
+					}
+					
+					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
+					
+					if(logger.isDebugEnabled())
+						logger.debug("Adding periodic task {} from passaway queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
+					
+					countableQueue.offerFirst(current);	
+				}
+				else
+				{
+					if(logger.isDebugEnabled())
+						logger.debug("Adding periodic task {} from passaway queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
+					
+					workerPool.getQueue().offerFirst(current);
+				}
+			}
+			else
+				logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", System.currentTimeMillis(), current.getRealTimestamp());
+		}
 		
 		// if(logger.isDebugEnabled())
 		// 	logger.debug("periodTime {} , originalTime {}, period {}", periodTime, originalTime, period);								
-
+		
 		do
 		{
 			if(previousRun.addAndGet(period) > System.currentTimeMillis()) {					
@@ -156,43 +191,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 				}
 			}
 		} 
-		while (periodTime.longValue() <= originalTime.longValue());
-
-		while ((current = passAwayQueue.poll()) != null)
-		{
-			//we are in pass away queue anway , lets execute everything that should be executed even in current cycle
-			if (current.getRealTimestamp() < (System.currentTimeMillis() + period))
-			{
-				if(current.getQueueIndex()!=null)
-				{
-					if(logger.isDebugEnabled()) {
-						logger.debug("Adding periodic task {} from passaway queue " +
-							" to workerpool local queue {} for execution at task " +
-							" real timestamp {}", 
-							current, 
-							current.getQueueIndex(), 
-							current.getRealTimestamp());								
-						logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}, timestamp {}", previousRun.get(), periodTime, originalTime, period, timestamp);									
-					}
-					
-					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
-					
-					if(logger.isDebugEnabled())
-						logger.debug("Adding periodic task {} from passaway queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
-					
-					countableQueue.offerFirst(current);	
-				}
-				else
-				{
-					if(logger.isDebugEnabled())
-						logger.debug("Adding periodic task {} from passaway queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
-					
-					workerPool.getQueue().offerFirst(current);
-				}
-			}
-			else
-				logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", System.currentTimeMillis(), current.getRealTimestamp());
-		}
+		while (periodTime.longValue() <= originalTime.longValue());		
 	}
 
 	public ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>> getQueues()
