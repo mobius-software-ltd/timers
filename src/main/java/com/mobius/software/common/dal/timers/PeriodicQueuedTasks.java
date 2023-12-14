@@ -63,12 +63,11 @@ public class PeriodicQueuedTasks<T extends Timer>
 		if(logger.isDebugEnabled())
 			logger.debug("storing task {} with timestamp {} in period Time {}", task, timestamp, periodTime);
 			
-		if (previousRunTime >= periodTime) {
+		if (previousRunTime >= periodTime || (timestamp<System.currentTimeMillis() + period)) {
 			if(logger.isDebugEnabled())
 				logger.debug("storing task {} in passAway queue and removing periodTime {} as previous Run Time {} is higher", task, periodTime, previousRunTime);
 
-			passAwayQueue.offer(task);
-			queues.remove(periodTime);	
+			passAwayQueue.offer(task);	
 		}
 		else
 		{
@@ -161,7 +160,8 @@ public class PeriodicQueuedTasks<T extends Timer>
 
 		while ((current = passAwayQueue.poll()) != null)
 		{
-			if (current.getRealTimestamp() < (periodTime + period))
+			//we are in pass away queue anway , lets execute everything that should be executed even in current cycle
+			if (current.getRealTimestamp() < (System.currentTimeMillis() + period))
 			{
 				if(current.getQueueIndex()!=null)
 				{
