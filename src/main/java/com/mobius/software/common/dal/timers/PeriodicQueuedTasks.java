@@ -190,6 +190,8 @@ public class PeriodicQueuedTasks<T extends Timer>
 					workerPool.getQueue().offerFirst(current);
 				}
 			}
+			else
+				logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", System.currentTimeMillis(), current.getRealTimestamp());
 		}
 	}
 
