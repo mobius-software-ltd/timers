@@ -128,13 +128,11 @@ public class PeriodicQueuedTasks<T extends Timer>
 		long timestamp = System.currentTimeMillis();
 		// original period time for the current timestamp
 		Long originalTime = (timestamp - timestamp % period - period);
-		// period time for the current timestamp then to be updated for the next period
-		Long periodTime = Long.valueOf(originalTime);					
-
+		
 		// 1. execute pass away queue
-		executePassAwayQueue(periodTime, timestamp);
+		executePassAwayQueue(originalTime, timestamp);
 		// 2. execute previous time periods
-		executePreviousRunTilCurrentPeriod(periodTime, originalTime, timestamp);
+		executePreviousRunTilCurrentPeriod(originalTime, timestamp);
 	}	
 
 	/**
@@ -143,86 +141,57 @@ public class PeriodicQueuedTasks<T extends Timer>
 	 * @param originalTime
 	 * @param timestamp
 	 */
-	private void executePreviousRunTilCurrentPeriod(Long periodTime, Long originalTime, long timestamp) {
+	private void executePreviousRunTilCurrentPeriod(Long originalTime, long timestamp) {
 		ConcurrentLinkedQueue<T> queue = null;		
 		
 		T current;
-		long previousRunNewTime;	
-		do
+		while (previousRun.get() <= originalTime.longValue())
 		{					
-			previousRunNewTime = previousRun.get();	
 			if(logger.isTraceEnabled())
-					logger.trace("previousRunNewTime: previousRunNewTime {}, periodTime {}, originalTime {}, period {}, current Timestamp {}", previousRunNewTime, periodTime, originalTime, period, timestamp);								
+					logger.trace("previousRunNewTime: previousRunNewTime {}, originalTime {}, period {}, current Timestamp {}", previousRun.get(), originalTime, period, timestamp);								
 			
 			// get the queue of tasks for the period
-			queue = queues.remove(previousRunNewTime);
+			queue = queues.remove(previousRun.get());
 			if (queue != null)
-			{				
+			{		
 				while ((current = queue.poll()) != null)
 				{
-					// unpile all tasks from the queue and execute them only if they are scheduled before the current period
-					if (current.getRealTimestamp() < (periodTime))
+					if(current.getQueueIndex()!=null)
 					{
-						if(current.getQueueIndex()!=null)
-						{
-							if(logger.isDebugEnabled()) {
-								logger.debug("Adding periodic task {} from queue " +
-									" to workerpool local queue {} for execution at task " +
-									" real timestamp {}", 
-									current, 
-									current.getQueueIndex(), 
-									current.getRealTimestamp());								
-								logger.debug("previousTimeRun {}, periodTime {} , originalTime {}, period {}, timestamp {}", previousRun.get(), periodTime, originalTime, period, timestamp);									
-							}
-							
-							CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
-							
-							if(logger.isDebugEnabled())
-								logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
-
-							countableQueue.offerFirst(current);							
-							
-						}
-						else
-						{
-							if(logger.isDebugEnabled())
-								logger.debug("Adding periodic task {} from queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
-							
-							workerPool.getQueue().offerFirst(current);
-						}
-					} else {
 						if(logger.isDebugEnabled()) {
-							if(current.getRealTimestamp() == Long.MAX_VALUE)
-								logger.debug("Ignoring task {} from queue since it was stopped", current);
-							else {								
-								logger.debug("realTimeStamp {}, periodTime {} , originalTime {}, period {}", current.getRealTimestamp(), periodTime, originalTime, period);								
-								logger.debug("adding task {} from queue to passaway queue for execution at task real timestamp {}", current, current.getRealTimestamp());	
-								passAwayQueue.offer(current);
-							}
+							logger.debug("Adding periodic task {} from queue " +
+								" to workerpool local queue {} for execution at task " +
+								" real timestamp {}", 
+								current, 
+								current.getQueueIndex(), 
+								current.getRealTimestamp());								
+							logger.debug("previousTimeRun {}, originalTime {}, period {}, timestamp {}", previousRun.get(), originalTime, period, timestamp);									
 						}
+						
+						CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
+						
+						if(logger.isDebugEnabled())
+							logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
+
+						countableQueue.offerFirst(current);							
+						
+					}
+					else
+					{
+						if(logger.isDebugEnabled())
+							logger.debug("Adding periodic task {} from queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
+						
+						workerPool.getQueue().offerFirst(current);
 					}
 				}
 			}
 
-			if(previousRunNewTime > timestamp) {									
-				// if we are processing the future, reset the previous run time to the original time
-				if(logger.isDebugEnabled())
-					logger.debug("we are processing the future, resetting previousRunNewTime: previousRunNewTime {}, periodTime {}, originalTime {}, period {}, current Timestamp {}", previousRunNewTime, periodTime, originalTime, period, timestamp);								
-				previousRun.set(originalTime);				
-				if(logger.isDebugEnabled())
-					logger.debug("resetted previousRun: previousRun {}, periodTime {}, originalTime {}, period {}, current Timestamp {}", previousRun.get(), periodTime, originalTime, period, timestamp);								
-				return;
-			} else {
-				// increase previous run time by one period
-				previousRun.set(previousRunNewTime + period);
-			}
+			// increase previous run time by one period
+			previousRun.addAndGet(period);
 			
-			previousRunNewTime = previousRun.get();	
 			if(logger.isTraceEnabled())
-					logger.trace("previousRunNewTime: previousRunNewTime {}, periodTime {}, originalTime {}, period {}, current Timestamp {}", previousRunNewTime, periodTime, originalTime, period, timestamp);								
-			
-		} 
-		while (previousRunNewTime < periodTime.longValue());	
+					logger.trace("previousRunNewTime: previousRunNewTime {}, originalTime {}, period {}, current Timestamp {}", previousRun.get(), originalTime, period, timestamp);											
+		}	
 	}
 
 	/**
@@ -231,14 +200,14 @@ public class PeriodicQueuedTasks<T extends Timer>
 	 * @param originalTime
 	 * @param timestamp
 	 */
-	private void executePassAwayQueue(Long periodTime, long timestamp) {		
+	private void executePassAwayQueue(Long originalTime, long timestamp) {		
 		T current;
 		while ((current = passAwayQueue.poll()) != null)
 		{	
 			//we are in pass away queue anway , lets execute everything that should be executed even in current cycle
 			long taskTimeStamp = current.getRealTimestamp();
 			if(logger.isDebugEnabled())
-				logger.debug("taskTimeStamp {}, periodTime {}, period {}, current Timestamp {}", taskTimeStamp, periodTime, period, timestamp);								
+				logger.debug("taskTimeStamp {}, periodTime {}, period {}, current Timestamp {}", taskTimeStamp, originalTime, period, timestamp);								
 
 			// if (taskTimeStamp < (periodTime + period))
 			// {
@@ -251,7 +220,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 							current, 
 							current.getQueueIndex(), 
 							current.getRealTimestamp());								
-						logger.debug("previousTimeRun {} , originalTime {}, period {}, timestamp {}", previousRun.get(), periodTime, period, timestamp);									
+						logger.debug("previousTimeRun {} , originalTime {}, period {}, timestamp {}", previousRun.get(), originalTime, period, timestamp);									
 					}
 					
 					CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
