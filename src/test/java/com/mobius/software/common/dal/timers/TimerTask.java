@@ -11,13 +11,19 @@ public class TimerTask implements Timer {
     private long startTime;
     private AtomicLong timestamp;
     private AtomicLong period;
-    
+
+    private AtomicLong counter;
 
     public TimerTask(WorkerPool workerPool, long timeout, long period) {
+        this(workerPool, System.currentTimeMillis(), timeout, period);        
+    }
+
+    public TimerTask(WorkerPool workerPool, long startTime, long timeout, long period) {
         this.workerPool = workerPool;
-        this.startTime = System.currentTimeMillis();
-        this.timestamp = new AtomicLong(System.currentTimeMillis() + timeout);        
+        this.startTime = startTime;
+        this.timestamp = new AtomicLong(this.startTime + timeout);        
         this.period = new AtomicLong(period);
+        counter = new AtomicLong(0);
     }
 
     @Override
@@ -25,7 +31,8 @@ public class TimerTask implements Timer {
         logger.debug("Executing local task of type " + this.getClass().getCanonicalName());
         if (timestamp.get() < Long.MAX_VALUE) {
             if(period.get() > 0) {
-                timestamp.set(System.currentTimeMillis() + period.get());
+                counter.incrementAndGet();
+                timestamp.set(timestamp.get() + period.get());
                 this.workerPool.getPeriodicQueue().store(timestamp.get(), this);
             } else {
                 timestamp.set(Long.MAX_VALUE);
@@ -51,7 +58,10 @@ public class TimerTask implements Timer {
 
     @Override
     public Integer getQueueIndex() {
-        return Math.abs(this.hashCode()) % 1;        
+        return 0;        
     }
     
+    public AtomicLong getCounter() {
+        return counter;
+    }
 }

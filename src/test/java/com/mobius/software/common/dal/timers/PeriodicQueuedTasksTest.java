@@ -24,11 +24,42 @@ public class PeriodicQueuedTasksTest {
 
     @Test
     public void testStoreTimeoutAndPeriod() throws InterruptedException {
-        Timer task = new TimerTask(workerPool, 500, 500);
+        System.out.println("testStoreTimeoutAndPeriod");
+        TimerTask task = new TimerTask(workerPool, 500, 500);
         tasks.store(task.getRealTimestamp(), task);
         assertEquals(1, tasks.getQueues().size());
         assertEquals(1, tasks.getQueues().values().iterator().next().size());
         assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(250);
+        assertEquals(1, tasks.getQueues().size());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        //1st execution
+        Thread.sleep(300);
+        // assertEquals(1, tasks.getQueues().size());
+        // assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        // assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(250);
+        // assertEquals(1, tasks.getQueues().size());
+        // assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        // assertEquals(task, tasks.getQueues().values().iterator().next().peek());        
+        task.stop();
+        // assertEquals(1, tasks.getQueues().size());
+        // assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        // assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(500);
+        assertEquals(0, tasks.getQueues().size());
+        assertEquals(0, tasks.getQueues().values().size());
+        assertEquals(1, task.getCounter().get());
+    }
+
+    @Test
+    public void testStorePassawayQueue() throws InterruptedException {
+        System.out.println("testStorePassawayQueue");
+        TimerTask task = new TimerTask(workerPool, System.currentTimeMillis() - 600, 500, 500);
+        tasks.store(task.getRealTimestamp(), task);
+        assertEquals(0, tasks.getQueues().size());
+        assertEquals(0, tasks.getQueues().values().size());
         Thread.sleep(250);
         assertEquals(1, tasks.getQueues().size());
         assertEquals(1, tasks.getQueues().values().iterator().next().size());
@@ -49,5 +80,36 @@ public class PeriodicQueuedTasksTest {
         Thread.sleep(500);
         assertEquals(0, tasks.getQueues().size());
         assertEquals(0, tasks.getQueues().values().size());
+        assertEquals(2, task.getCounter().get());
+    }
+
+    @Test
+    public void testZeroDelay() throws InterruptedException {
+        System.out.println("testZeroDelay");
+        TimerTask task = new TimerTask(workerPool, 0, 500);
+        tasks.store(task.getRealTimestamp(), task);
+        // assertEquals(0, tasks.getQueues().size());
+        // assertEquals(0, tasks.getQueues().values().size());
+        Thread.sleep(250);
+        assertEquals(1, tasks.getQueues().size());
+        assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        //1st execution
+        Thread.sleep(300);
+        // assertEquals(1, tasks.getQueues().size());
+        // assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        // assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(250);
+        // assertEquals(1, tasks.getQueues().size());
+        // assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        // assertEquals(task, tasks.getQueues().values().iterator().next().peek());        
+        task.stop();
+        // assertEquals(1, tasks.getQueues().size());
+        // assertEquals(1, tasks.getQueues().values().iterator().next().size());
+        // assertEquals(task, tasks.getQueues().values().iterator().next().peek());
+        Thread.sleep(500);
+        assertEquals(0, tasks.getQueues().size());
+        assertEquals(0, tasks.getQueues().values().size());
+        assertEquals(2, task.getCounter().get());
     }
 }

@@ -29,6 +29,6 @@ public class TimersRunner implements Runnable
 	@Override
 	public void run()
 	{
-		scheduler.executePreviousPool(System.currentTimeMillis());
+		scheduler.executePreviousPool();
 	}
 }
