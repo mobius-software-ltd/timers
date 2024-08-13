@@ -156,33 +156,40 @@ public class PeriodicQueuedTasks<T extends Timer>
 			{		
 				while ((current = queue.poll()) != null)
 				{
-					if(current.getQueueIndex()!=null)
+					if (current.getRealTimestamp() < (originalTime + period))
 					{
-						if(logger.isDebugEnabled()) {
-							logger.debug("Adding periodic task {} from queue " +
-								" to workerpool local queue {} for execution at task " +
-								" real timestamp {}", 
-								current, 
-								current.getQueueIndex(), 
-								current.getRealTimestamp());								
-							logger.debug("previousTimeRun {}, originalTime {}, period {}, timestamp {}", previousRun.get(), originalTime, period, timestamp);									
+						if(current.getQueueIndex()!=null)
+						{
+							if(logger.isDebugEnabled()) {
+								logger.debug("Adding periodic task {} from queue " +
+									" to workerpool local queue {} for execution at task " +
+									" real timestamp {}", 
+									current, 
+									current.getQueueIndex(), 
+									current.getRealTimestamp());								
+								logger.debug("previousTimeRun {}, originalTime {}, period {}, timestamp {}", previousRun.get(), originalTime, period, timestamp);									
+							}
+							
+							CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
+							
+							if(logger.isDebugEnabled())
+								logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
+	
+							if (current.getRealTimestamp() < (originalTime + period))
+								countableQueue.offerLast(current);							
+							
 						}
-						
-						CountableQueue<Task> countableQueue = workerPool.getLocalQueue(current.getQueueIndex());
-						
-						if(logger.isDebugEnabled())
-							logger.debug("Adding periodic task {} from queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), current.getRealTimestamp());
-
-						countableQueue.offerFirst(current);							
-						
+						else
+						{
+							if(logger.isDebugEnabled())
+								logger.debug("Adding periodic task {} from queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
+							
+							if (current.getRealTimestamp() < (originalTime + period))
+								workerPool.getQueue().offerLast(current);
+						}
 					}
 					else
-					{
-						if(logger.isDebugEnabled())
-							logger.debug("Adding periodic task {} from queue to workerpool queue for execution at task real timestamp {}", current, current.getRealTimestamp());
-						
-						workerPool.getQueue().offerFirst(current);
-					}
+						logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, current.getRealTimestamp());
 				}
 			}
 
@@ -209,8 +216,8 @@ public class PeriodicQueuedTasks<T extends Timer>
 			if(logger.isDebugEnabled())
 				logger.debug("taskTimeStamp {}, periodTime {}, period {}, current Timestamp {}", taskTimeStamp, originalTime, period, timestamp);								
 
-			// if (taskTimeStamp < (periodTime + period))
-			// {
+			if (taskTimeStamp < (originalTime + period))
+			{
 				if(current.getQueueIndex()!=null)
 				{
 					if(logger.isDebugEnabled()) {
@@ -228,18 +235,20 @@ public class PeriodicQueuedTasks<T extends Timer>
 					if(logger.isDebugEnabled())
 						logger.debug("Adding periodic task {} from passaway queue to workerpool local queue {} for execution at task real timestamp {}", current, countableQueue.hashCode(), taskTimeStamp);
 					
-					countableQueue.offerFirst(current);	
+					if (current.getRealTimestamp() < (originalTime + period))
+						countableQueue.offerFirst(current);	
 				}
 				else
 				{
 					if(logger.isDebugEnabled())
 						logger.debug("Adding periodic task {} from passaway queue to workerpool queue for execution at task real timestamp {}", current, taskTimeStamp);
 					
-					workerPool.getQueue().offerFirst(current);
+					if (current.getRealTimestamp() < (originalTime + period))
+						workerPool.getQueue().offerFirst(current);
 				}
-			// }
-			// else
-			// 	logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, taskTimeStamp);
+			}
+			else
+			 	logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, taskTimeStamp);
 		}
 	}
 
