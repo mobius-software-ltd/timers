@@ -69,7 +69,32 @@ public class PeriodicQueuedTasks<T extends Timer>
 		if(logger.isDebugEnabled())
 			logger.debug("storing task {} with timestamp {} in period Time {}", task, timestamp, periodTime);
 			
-		if (previousRunTime >= periodTime || (timestamp<System.currentTimeMillis() + period)) {
+		if(timestamp<=System.currentTimeMillis())
+		{
+			if(task.getQueueIndex()!=null)
+			{
+				if(logger.isDebugEnabled()) {
+					logger.debug("Adding periodic task {} immediately because its in past " +
+						" to workerpool local queue {} for execution at task " +
+						" real timestamp {}", 
+						task, 
+						task.getQueueIndex(), 
+						task.getRealTimestamp());								
+				}
+				
+				CountableQueue<Task> countableQueue = workerPool.getLocalQueue(task.getQueueIndex());
+				
+				countableQueue.offerFirst(task);	
+			}
+			else
+			{
+				if(logger.isDebugEnabled())
+					logger.debug("Adding periodic task {} immediately because its in past to workerpool queue for execution at task real timestamp {}", task, task.getRealTimestamp());
+				
+				workerPool.getQueue().offerFirst(task);
+			}
+		}
+		else if (previousRunTime >= periodTime || (timestamp<System.currentTimeMillis() + period)) {
 			if(logger.isDebugEnabled())
 				logger.debug("storing task {} in passAway queue as previous Run Time {} is higher", task, periodTime, previousRunTime);
 
@@ -189,7 +214,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 						}
 					}
 					else
-						logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, current.getRealTimestamp());
+						logger.debug("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, current.getRealTimestamp());
 				}
 			}
 
@@ -248,7 +273,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 				}
 			}
 			else
-			 	logger.warn("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, taskTimeStamp);
+			 	logger.debug("Ignoring task in pass away queue since it was scheduled in the future current time {} , real time of task {}", timestamp, taskTimeStamp);
 		}
 	}
 

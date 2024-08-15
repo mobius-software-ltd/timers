@@ -126,6 +126,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<detectJavaApiLink>false</detectJavaApiLink>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
