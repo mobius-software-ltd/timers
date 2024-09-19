@@ -20,21 +20,34 @@ package com.mobius.software.common.dal.timers;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CountableQueue<T extends Task>
 {
 	private LinkedBlockingDeque<T> queue = new LinkedBlockingDeque<T>();
 	private AtomicInteger counter = new AtomicInteger(0);
-
+	private AtomicLong globalPendingCounter;
+	private AtomicLong globalStoredCounter;
+	
+	public CountableQueue(AtomicLong globalStoredCounter,AtomicLong globalPendingCounter)
+	{
+		this.globalStoredCounter=globalStoredCounter;
+		this.globalPendingCounter=globalPendingCounter;
+	}
+	
 	public void offerLast(T element)
 	{
 		counter.incrementAndGet();
+		globalPendingCounter.incrementAndGet();
+		globalStoredCounter.incrementAndGet();
 		queue.offerLast(element);
 	}
 
 	public void offerFirst(T element)
 	{
 		counter.incrementAndGet();
+		globalPendingCounter.incrementAndGet();
+		globalStoredCounter.incrementAndGet();
 		queue.offerFirst(element);
 	}
 
@@ -42,7 +55,10 @@ public class CountableQueue<T extends Task>
 	{
 		T element = queue.take();
 		if (element != null)
+		{
 			counter.decrementAndGet();
+			globalPendingCounter.decrementAndGet();
+		}
 		return element;
 	}
 
@@ -50,7 +66,10 @@ public class CountableQueue<T extends Task>
 	{
 		T element = queue.poll(timeout, unit);
 		if (element != null)
+		{
 			counter.decrementAndGet();
+			globalPendingCounter.decrementAndGet();
+		}
 		return element;
 	}
 	
@@ -58,14 +77,17 @@ public class CountableQueue<T extends Task>
 	{
 		T element = queue.poll();
 		if (element != null)
+		{
 			counter.decrementAndGet();
+			globalPendingCounter.decrementAndGet();
+		}
 		return element;
 	}
 
 	public boolean thresholdReached(int threshold,int timeThreshold)
 	{
 		T task = queue.peek();
-		if (task != null && task.getStartTime()<System.currentTimeMillis()-timeThreshold)
+		if (task != null && task.getStartTime()<(System.currentTimeMillis()-timeThreshold))
 			return counter.get() >= threshold;
 			
 		return false;		
@@ -84,6 +106,7 @@ public class CountableQueue<T extends Task>
 	public void clear()
 	{
 		queue.clear();
+		globalPendingCounter.addAndGet(0-counter.get());
 		counter.set(0);
 	}
 }

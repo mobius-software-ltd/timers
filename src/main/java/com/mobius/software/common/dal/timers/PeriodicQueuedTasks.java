@@ -34,8 +34,10 @@ public class PeriodicQueuedTasks<T extends Timer>
 
 	private long period;
 	private AtomicLong previousRun = new AtomicLong(0);	
+	private AtomicLong totalStoredTasks;
+	private AtomicLong totalPendingTasks;
 	
-	public PeriodicQueuedTasks(long period, WorkerPool workerPool)
+	public PeriodicQueuedTasks(long period, WorkerPool workerPool, AtomicLong totalStoredTasks, AtomicLong totalPendingTasks)
 	{
 		this.workerPool = workerPool;
 		this.period = period;
@@ -43,6 +45,8 @@ public class PeriodicQueuedTasks<T extends Timer>
 		Long originalTime = System.currentTimeMillis();
 		originalTime = (originalTime - originalTime % period - period);
 		this.previousRun.set(originalTime);
+		this.totalStoredTasks=totalStoredTasks;
+		this.totalPendingTasks=totalPendingTasks;
 	}
 
 	public long getPeriod()
@@ -69,6 +73,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 		if(logger.isDebugEnabled())
 			logger.debug("storing task {} with timestamp {} in period Time {}", task, timestamp, periodTime);
 			
+		totalStoredTasks.incrementAndGet();
 		if(timestamp<=System.currentTimeMillis())
 		{
 			if(task.getQueueIndex()!=null)
@@ -83,7 +88,6 @@ public class PeriodicQueuedTasks<T extends Timer>
 				}
 				
 				CountableQueue<Task> countableQueue = workerPool.getLocalQueue(task.getQueueIndex());
-				
 				countableQueue.offerFirst(task);	
 			}
 			else
@@ -98,6 +102,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 			if(logger.isDebugEnabled())
 				logger.debug("storing task {} in passAway queue as previous Run Time {} is higher", task, periodTime, previousRunTime);
 
+			totalPendingTasks.incrementAndGet();
 			passAwayQueue.offer(task);	
 		}
 		else
@@ -106,14 +111,14 @@ public class PeriodicQueuedTasks<T extends Timer>
 			if (queue == null)
 			{
 				queue = new ConcurrentLinkedQueue<T>();
-				ConcurrentLinkedQueue<T> oldQueue = queues.putIfAbsent(
-						periodTime, queue);
+				ConcurrentLinkedQueue<T> oldQueue = queues.putIfAbsent(periodTime, queue);
 				if (oldQueue != null)
 					queue = oldQueue;
 				if(logger.isDebugEnabled())
 					logger.debug("task {} creating in new queue {} for period {}", task, queue.hashCode(), periodTime);
 			}
 			
+			totalPendingTasks.incrementAndGet();
 			previousRunTime = previousRun.get();
 			if (previousRunTime >= periodTime)
 			{
@@ -181,6 +186,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 			{		
 				while ((current = queue.poll()) != null)
 				{
+					totalPendingTasks.decrementAndGet();
 					if (current.getRealTimestamp() < (originalTime + period))
 					{
 						if(current.getQueueIndex()!=null)
@@ -236,6 +242,7 @@ public class PeriodicQueuedTasks<T extends Timer>
 		T current;
 		while ((current = passAwayQueue.poll()) != null)
 		{	
+			totalPendingTasks.decrementAndGet();
 			//we are in pass away queue anway , lets execute everything that should be executed even in current cycle
 			long taskTimeStamp = current.getRealTimestamp();
 			if(logger.isDebugEnabled())

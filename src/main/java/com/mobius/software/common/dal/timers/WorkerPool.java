@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,10 +43,14 @@ public class WorkerPool
 	private long taskPoolInterval = 100L;	
 	private List<Worker> workers;
 	
+	private AtomicLong totalStoredTasks=new AtomicLong();
+	private AtomicLong totalPendingTasks=new AtomicLong();
+	private AtomicLong totalStoredTimerTasks=new AtomicLong();
+	private AtomicLong totalPendingTimersTasks=new AtomicLong();
 	public WorkerPool()
 	{
-		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this);
+		queue=new CountableQueue<Task>(totalStoredTasks,totalPendingTasks);
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);
 		
 		logger.info("Starting workerpool with interval " + taskPoolInterval);
 	}
@@ -53,8 +58,8 @@ public class WorkerPool
 	public WorkerPool(long taskPoolInterval)
 	{
 		this.taskPoolInterval = taskPoolInterval;
-		queue=new CountableQueue<Task>();
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this);		
+		queue=new CountableQueue<Task>(totalStoredTasks,totalPendingTasks);
+		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);		
 		
 		logger.info("Starting workerpool with interval " + taskPoolInterval);
 	}	
@@ -74,7 +79,7 @@ public class WorkerPool
 		workers = new ArrayList<Worker>();
 		for(int i=0;i<workersNumber;i++)
 		{
-			workers.add(new Worker(queue, new CountableQueue<Task>(), true, taskPoolInterval));
+			workers.add(new Worker(queue, new CountableQueue<Task>(totalStoredTasks,totalPendingTasks), true, taskPoolInterval));
 			workersExecutors.execute(workers.get(i));
 		}
 	}
@@ -113,4 +118,24 @@ public class WorkerPool
 	{
 		return periodicQueue;
 	}		
+	
+	public Long getQueueSize()
+	{
+		return totalPendingTasks.get();
+	}
+	
+	public Long getScheduledSize()
+	{
+		return totalPendingTimersTasks.get();
+	}
+	
+	public Long getStoredTasks()
+	{
+		return totalStoredTasks.get();
+	}
+	
+	public Long getStoredScheduledTasks()
+	{
+		return totalStoredTimerTasks.get();
+	}
 }
