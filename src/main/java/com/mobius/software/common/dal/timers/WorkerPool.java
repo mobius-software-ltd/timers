@@ -100,6 +100,38 @@ public class WorkerPool
 		workers = null;
 	}
 	
+	public void addTaskFirst(RunnableTask task)
+	{
+		CountableQueue<Task> queue = this.getQueue(task.getId());
+		if (queue != null)
+			queue.offerFirst(task);
+	}
+
+	public void addTaskLast(RunnableTask task)
+	{
+		CountableQueue<Task> queue = this.getQueue(task.getId());
+		if (queue != null)
+			queue.offerLast(task);
+	}
+	
+	public void addTimer(RunnableTimer timer) {
+		int queueIndex = this.findQueueIndex(timer.getId());
+		
+		timer.setQueueIndex(queueIndex);
+		periodicQueue.store(timer.getRealTimestamp(), timer);
+	}
+
+	private CountableQueue<Task> getQueue(String id)
+	{		
+		int index = this.findQueueIndex(id);
+		return this.getLocalQueue(index);
+	}
+
+	public int findQueueIndex(String id)
+	{
+		return Math.abs(id.hashCode()) % workers.size();
+	}
+	
 	public CountableQueue<Task> getQueue() 
 	{
 		return queue;
