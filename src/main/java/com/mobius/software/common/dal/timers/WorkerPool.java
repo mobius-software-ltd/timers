@@ -97,6 +97,10 @@ public class WorkerPool
 		timersExecutor.shutdown();
 		timersExecutor = null;
 		
+		for (Worker worker : workers) {
+			worker.stop();
+		}
+		
 		workers = null;
 	}
 	
