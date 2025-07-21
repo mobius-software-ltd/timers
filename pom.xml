@@ -7,7 +7,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>mobius-timers</artifactId>
-	<version>1.0.0-36-SNAPSHOT</version>
+	<version>1.0.0-35-java11</version>
 	<packaging>jar</packaging>
 
 	<name>mobius-timers</name>
@@ -63,7 +63,7 @@
 		<url>https://github.com/mobius-software-ltd/timers</url>
 		<connection>scm:git:git://github.com:mobius-software-ltd/timers.git</connection>
 		<developerConnection>scm:git:git@github.com:mobius-software-ltd/timers.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>mobius-timers-1.0.0-35-java11</tag>
 	</scm>
 
 	<developers>
