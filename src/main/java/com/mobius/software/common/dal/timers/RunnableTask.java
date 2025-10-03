@@ -1,6 +1,11 @@
 package com.mobius.software.common.dal.timers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class RunnableTask implements Task {
+	private static Logger logger = LogManager.getLogger(Worker.class);
+
 	private final Runnable runnable;
 	private final String id;
 	
@@ -11,6 +16,9 @@ public class RunnableTask implements Task {
 	
 	@Override
 	public void execute() {
+		if(logger.isDebugEnabled())
+			logger.debug("Executing local runnable {}", runnable);
+
 		this.runnable.run();		
 	}
 
