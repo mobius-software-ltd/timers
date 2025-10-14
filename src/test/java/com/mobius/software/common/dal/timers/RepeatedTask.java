@@ -74,4 +74,10 @@ public class RepeatedTask implements Timer {
     {
         return executedTimes.get();
     }
+
+	@Override
+	public String printTaskDetails()
+	{
+		return "Task name: RepeatedTask";
+	}
 }

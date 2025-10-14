@@ -29,6 +29,7 @@ public class Worker  implements Runnable
 
 	private CountableQueue<Task> queue;
 	private CountableQueue<Task> localQueue;
+	private Task lastTask;
 	
 	private boolean isRunning;
 	private Long taskPoolInterval;
@@ -49,6 +50,7 @@ public class Worker  implements Runnable
 			try
 			{
 				Task task = this.localQueue.poll();
+				lastTask = task;
 				if (task != null)
 				{
 					if(logger.isDebugEnabled())
@@ -107,5 +109,9 @@ public class Worker  implements Runnable
 	public CountableQueue<Task> getLocalQueue()
 	{
 		return localQueue;
+	}
+
+	public Task getLastTask() {
+		return lastTask;
 	}
 }

@@ -38,9 +38,12 @@ public class WorkerPool
 	private PeriodicQueuedTasks<Timer> periodicQueue;
 	
 	private ScheduledExecutorService timersExecutor;
+	private ScheduledExecutorService healthCheckExecutor;
 	private ExecutorService workersExecutors;
 	
 	private long taskPoolInterval = 100L;	
+	private long healthCheckInterval = 10000L;
+	private long maxHealthCheckExecutionTime = 10000L;
 	private List<Worker> workers;
 	
 	private AtomicLong totalStoredTasks=new AtomicLong();
@@ -82,6 +85,8 @@ public class WorkerPool
 			workers.add(new Worker(queue, new CountableQueue<Task>(totalStoredTasks,totalPendingTasks), true, taskPoolInterval));
 			workersExecutors.execute(workers.get(i));
 		}
+		healthCheckExecutor = Executors.newSingleThreadScheduledExecutor();
+		healthCheckExecutor.scheduleWithFixedDelay(new HealthCheckTimer(workers, maxHealthCheckExecutionTime), 0, healthCheckInterval, TimeUnit.MILLISECONDS);
 	}
 	
 	public void stop()
@@ -96,6 +101,9 @@ public class WorkerPool
 		
 		timersExecutor.shutdown();
 		timersExecutor = null;
+		
+		healthCheckExecutor.shutdown();
+		healthCheckExecutor = null;
 		
 		for (Worker worker : workers) {
 			worker.stop();
