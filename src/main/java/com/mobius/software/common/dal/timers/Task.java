@@ -1,4 +1,5 @@
 package com.mobius.software.common.dal.timers;
+
 /*
  * Mobius Software LTD
  * Copyright 2019 - 2023, Mobius Software LTD and individual contributors
@@ -20,6 +21,8 @@ package com.mobius.software.common.dal.timers;
 public interface Task
 {
 	void execute();
-	
+
 	long getStartTime();
+
+	String printTaskDetails();
 }

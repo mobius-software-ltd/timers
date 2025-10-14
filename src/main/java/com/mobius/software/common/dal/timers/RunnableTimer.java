@@ -4,14 +4,16 @@ public class RunnableTimer implements Timer {
 	private final Runnable runnable;
 	private final long executionTime;
 	private final String id;
+	private final String taskName;
 	
 	protected long startTime = System.currentTimeMillis();
 	private Integer queueIndex = null;
 	
-	public RunnableTimer(Runnable runnable, Long executionTime, String id) {
+	public RunnableTimer(Runnable runnable, Long executionTime, String id, String taskName) {
 		this.runnable = runnable;
 		this.executionTime = executionTime;
 		this.id = id;
+		this.taskName = taskName;
 	}
 	
 	@Override
@@ -47,5 +49,14 @@ public class RunnableTimer implements Timer {
 	@Override
 	public Integer getQueueIndex() {
 		return this.queueIndex;
+	}
+
+	public String getTaskName() {
+		return this.taskName;
+	}
+
+	@Override
+	public String printTaskDetails() {
+		return "Task name: " + taskName + ", id: " + id;
 	}
 }

@@ -64,4 +64,10 @@ public class RegularTask implements Timer {
     {
         return executed.get();
     }
+
+	@Override
+	public String printTaskDetails()
+	{
+		return "Task name: RegularTask";
+	}
 }

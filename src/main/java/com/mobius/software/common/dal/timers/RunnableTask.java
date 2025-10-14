@@ -8,10 +8,12 @@ public class RunnableTask implements Task {
 
 	private final Runnable runnable;
 	private final String id;
+	private final String taskName;
 	
-	public RunnableTask(Runnable runnable, String id) {
+	public RunnableTask(Runnable runnable, String id, String taskName) {
 		this.runnable = runnable;
 		this.id = id;
+		this.taskName = taskName;
 	}
 	
 	@Override
@@ -29,5 +31,14 @@ public class RunnableTask implements Task {
 	
 	public String getId() {
 		return this.id;
+	}
+
+	public String getTaskName() {
+		return this.taskName;
+	}
+
+	@Override
+	public String printTaskDetails() {
+		return "Task details. Task name: " + taskName + ", id: " + id;
 	}
 }
