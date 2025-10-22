@@ -50,39 +50,42 @@ public class WorkerPool
 	private AtomicLong totalPendingTasks=new AtomicLong();
 	private AtomicLong totalStoredTimerTasks=new AtomicLong();
 	private AtomicLong totalPendingTimersTasks=new AtomicLong();
-	public WorkerPool()
+	
+	private String workerPoolName;
+	
+	public WorkerPool(String poolName)
 	{
 		queue=new CountableQueue<Task>(totalStoredTasks,totalPendingTasks);
 		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);
-		
-		logger.info("Starting workerpool with interval " + taskPoolInterval);
+		this.workerPoolName = poolName;
+		logger.info("Starting workerpool " + workerPoolName + " with interval " + taskPoolInterval);
 	}
 	
-	public WorkerPool(long taskPoolInterval)
+	public WorkerPool(String poolName, long taskPoolInterval)
 	{
 		this.taskPoolInterval = taskPoolInterval;
 		queue=new CountableQueue<Task>(totalStoredTasks,totalPendingTasks);
 		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);		
-		
-		logger.info("Starting workerpool with interval " + taskPoolInterval);
+		this.workerPoolName = poolName;
+		logger.info("Starting workerpool " + workerPoolName + " with interval " + taskPoolInterval);
 	}	
 
 	public void start(int workersNumber)
 	{
 		if(timersExecutor != null) {
-			logger.warn("The worker pool is already started, can not start it second time!!!!");
+			logger.warn("The worker pool  " + workerPoolName + " is already started, can not start it second time!!!!");
 			return;
 		}
 		
 		timersExecutor = Executors.newScheduledThreadPool(1);
-		timersExecutor.scheduleWithFixedDelay(new TimersRunner(periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
+		timersExecutor.scheduleWithFixedDelay(new TimersRunner(workerPoolName, periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
 		
 		workersExecutors = Executors.newFixedThreadPool(workersNumber);
 		
 		workers = new ArrayList<Worker>();
 		for(int i=0;i<workersNumber;i++)
 		{
-			workers.add(new Worker(queue, new CountableQueue<Task>(totalStoredTasks,totalPendingTasks), true, taskPoolInterval));
+			workers.add(new Worker(workerPoolName, queue, new CountableQueue<Task>(totalStoredTasks,totalPendingTasks), true, taskPoolInterval, i));
 			workersExecutors.execute(workers.get(i));
 		}
 		healthCheckExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -92,7 +95,7 @@ public class WorkerPool
 	public void stop()
 	{
 		if(timersExecutor==null) {
-			logger.warn("The worker pool is already stopped or not started, can not stop it second time!!!!");
+			logger.warn("The worker pool " + workerPoolName + " is already stopped or not started, can not stop it second time!!!!");
 			return;
 		}
 		

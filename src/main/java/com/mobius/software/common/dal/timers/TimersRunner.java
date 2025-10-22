@@ -20,15 +20,17 @@ package com.mobius.software.common.dal.timers;
 public class TimersRunner implements Runnable
 {
 	private PeriodicQueuedTasks<Timer> scheduler;
-
-	public TimersRunner(PeriodicQueuedTasks<Timer> scheduler)
+	private String workerPoolName;
+	public TimersRunner(String workerPoolName, PeriodicQueuedTasks<Timer> scheduler)
 	{
+		this.workerPoolName = workerPoolName;
 		this.scheduler = scheduler;
 	}
 
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName(this.workerPoolName + "-thread-timers");
 		scheduler.executePreviousPool();
 	}
 }

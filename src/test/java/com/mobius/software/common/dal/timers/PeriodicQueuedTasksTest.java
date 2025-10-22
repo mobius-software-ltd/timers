@@ -23,7 +23,7 @@ public class PeriodicQueuedTasksTest
     {
     	Configurator.initialize(new DefaultConfiguration());
 		
-        workerPool = new WorkerPool(10);        
+        workerPool = new WorkerPool("Test Pool", 10);        
         workerPool.start(1);
         tasks = workerPool.getPeriodicQueue();
     }

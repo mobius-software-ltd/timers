@@ -19,7 +19,7 @@ public class HealthCheckTest
     {
     	Configurator.initialize(new DefaultConfiguration());
 		
-        workerPool = new WorkerPool(10);        
+        workerPool = new WorkerPool("TestPool", 10);        
         workerPool.start(1);
         tasks = workerPool.getPeriodicQueue();
     }

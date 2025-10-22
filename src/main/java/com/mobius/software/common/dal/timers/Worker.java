@@ -33,18 +33,23 @@ public class Worker  implements Runnable
 	
 	private boolean isRunning;
 	private Long taskPoolInterval;
+	private String workerPoolName;
+	private Integer workerIndex;
 	
-	public Worker(CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval)
+	public Worker(String workerPoolName, CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval, Integer workerIndex)
 	{
 		this.queue = queue;
 		this.localQueue = localQueue;
 		this.isRunning = isRunning;
 		this.taskPoolInterval = taskPollInterval;		
+		this.workerIndex = workerIndex;
+		this.workerPoolName = workerPoolName;
 	}
 	
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName(this.workerPoolName + "-thread-" + (workerIndex+1));
 		while (isRunning)
 		{
 			try
