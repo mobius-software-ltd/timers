@@ -42,8 +42,8 @@ public class WorkerPool
 	private ExecutorService workersExecutors;
 	
 	private long taskPoolInterval = 100L;	
-	private long healthCheckInterval = 10000L;
-	private long maxHealthCheckExecutionTime = 10000L;
+	private long healthCheckInterval = 1000L;
+	private long maxHealthCheckExecutionTime = 1000L;
 	private List<Worker> workers;
 	
 	private AtomicLong totalStoredTasks=new AtomicLong();
