@@ -63,6 +63,7 @@ public class Worker  implements Runnable
 
 					try
 					{
+						Thread.currentThread().setName(this.workerPoolName + "-thread-" + (workerIndex+1) + "[" + task.printTaskDetails() + "]");
 						task.execute();
 					}					
 					catch (Exception e)
@@ -86,6 +87,7 @@ public class Worker  implements Runnable
 
 					try
 					{
+						Thread.currentThread().setName(this.workerPoolName + "-thread-" + (workerIndex+1) + "[" + task.printTaskDetails() + "]");
 						task.execute();				
 					}
 					catch (Exception e)
