@@ -7,7 +7,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>mobius-timers</artifactId>
-	<version>1.0.0-38-SNAPSHOT</version>
+	<version>1.0.0-39-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>mobius-timers</name>
