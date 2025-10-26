@@ -47,7 +47,7 @@ public class HealthCheckTimer implements Runnable
 
 				if (lastTask != null && expirationTime > lastTask.getStartTime())
 				{
-					logger.error("Task was not executed within 10 seconds. Task details: " + lastTask.printTaskDetails());
+					logger.error("Task was not executed within max allowed time. Task details: " + lastTask.printTaskDetails());
 				}
 			}
 		}
