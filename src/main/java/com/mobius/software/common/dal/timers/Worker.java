@@ -36,6 +36,8 @@ public class Worker  implements Runnable
 	private String workerPoolName;
 	private Integer workerIndex;
 	
+	private Long currentTaskStartTime;
+	
 	public Worker(String workerPoolName, CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval, Integer workerIndex)
 	{
 		this.queue = queue;
@@ -58,6 +60,7 @@ public class Worker  implements Runnable
 				lastTask = task;
 				if (task != null)
 				{
+					currentTaskStartTime = System.currentTimeMillis();
 					if(logger.isDebugEnabled())
 						logger.debug("Executing local task {}", task);
 
@@ -82,6 +85,7 @@ public class Worker  implements Runnable
 				
 				if (task != null)
 				{
+					currentTaskStartTime = System.currentTimeMillis();
 					if(logger.isDebugEnabled())
 						logger.debug("Executing task {}", task);
 
@@ -118,7 +122,13 @@ public class Worker  implements Runnable
 		return localQueue;
 	}
 
-	public Task getLastTask() {
+	public Task getLastTask() 
+	{
 		return lastTask;
+	}
+	
+	public Long getCurrentTaskStartTime()
+	{
+		return currentTaskStartTime;
 	}
 }
