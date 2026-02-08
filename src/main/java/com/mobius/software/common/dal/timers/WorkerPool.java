@@ -30,91 +30,106 @@ import org.apache.logging.log4j.Logger;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-public class WorkerPool 
+public class WorkerPool
 {
-	private static Logger logger = LogManager.getLogger(Worker.class);		
+	private static final Logger logger = LogManager.getLogger(Worker.class);
+	private static final WorkerPoolManager poolManager = WorkerPoolManager.getInstance();
+
+	private final int id = WorkerPoolManager.getNextPoolID();
+	private final String name;
 
 	private CountableQueue<Task> queue;
 	private PeriodicQueuedTasks<Timer> periodicQueue;
-	
+
 	private ScheduledExecutorService timersExecutor;
 	private ScheduledExecutorService healthCheckExecutor;
 	private ExecutorService workersExecutors;
-	
-	private long taskPoolInterval = 100L;	
+
 	private long healthCheckInterval = 1000L;
 	private long maxHealthCheckExecutionTime = 1000L;
+	private long taskPoolInterval;
 	private List<Worker> workers;
-	
-	private AtomicLong totalStoredTasks=new AtomicLong();
-	private AtomicLong totalPendingTasks=new AtomicLong();
-	private AtomicLong totalStoredTimerTasks=new AtomicLong();
-	private AtomicLong totalPendingTimersTasks=new AtomicLong();
-	
-	private String workerPoolName;
-	
-	public WorkerPool(String poolName)
+
+	private AtomicLong totalStoredTasks = new AtomicLong();
+	private AtomicLong totalPendingTasks = new AtomicLong();
+	private AtomicLong totalStoredTimerTasks = new AtomicLong();
+	private AtomicLong totalPendingTimersTasks = new AtomicLong();
+
+	public WorkerPool(String name)
 	{
-		queue=new CountableQueue<Task>(totalStoredTasks,totalPendingTasks);
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);
-		this.workerPoolName = poolName;
-		logger.info("Starting workerpool " + workerPoolName + " with interval " + taskPoolInterval);
+		this(name, 100L);
 	}
-	
-	public WorkerPool(String poolName, long taskPoolInterval)
+
+	public WorkerPool(String name, long taskPoolInterval)
 	{
+		this.name = name;
 		this.taskPoolInterval = taskPoolInterval;
-		queue=new CountableQueue<Task>(totalStoredTasks,totalPendingTasks);
-		periodicQueue=new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);		
-		this.workerPoolName = poolName;
-		logger.info("Starting workerpool " + workerPoolName + " with interval " + taskPoolInterval);
-	}	
+
+		queue = new CountableQueue<Task>(totalStoredTasks, totalPendingTasks);
+		periodicQueue = new PeriodicQueuedTasks<Timer>(taskPoolInterval, this, totalStoredTimerTasks, totalPendingTimersTasks);
+		logger.info("Starting worker pool " + name + " with interval " + taskPoolInterval);
+	}
 
 	public void start(int workersNumber)
 	{
-		if(timersExecutor != null) {
-			logger.warn("The worker pool  " + workerPoolName + " is already started, can not start it second time!!!!");
+		if (timersExecutor != null)
+		{
+			logger.warn("The worker pool  " + name + " is already started, can not start it second time!!!!");
 			return;
 		}
-		
+
 		timersExecutor = Executors.newScheduledThreadPool(1);
-		timersExecutor.scheduleWithFixedDelay(new TimersRunner(workerPoolName, periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
-		
+		timersExecutor.scheduleWithFixedDelay(new TimersRunner(name, periodicQueue), 0, taskPoolInterval, TimeUnit.MILLISECONDS);
+
 		workersExecutors = Executors.newFixedThreadPool(workersNumber);
-		
+
 		workers = new ArrayList<Worker>();
-		for(int i=0;i<workersNumber;i++)
+		for (int i = 0; i < workersNumber; i++)
 		{
-			workers.add(new Worker(workerPoolName, queue, new CountableQueue<Task>(totalStoredTasks,totalPendingTasks), true, taskPoolInterval, i));
+			workers.add(new Worker(name, queue, new CountableQueue<Task>(totalStoredTasks, totalPendingTasks), true, taskPoolInterval, i));
 			workersExecutors.execute(workers.get(i));
 		}
+
 		healthCheckExecutor = Executors.newSingleThreadScheduledExecutor();
 		healthCheckExecutor.scheduleWithFixedDelay(new HealthCheckTimer(workers, maxHealthCheckExecutionTime), 0, healthCheckInterval, TimeUnit.MILLISECONDS);
+
+		poolManager.notifyPoolStarted(this);
 	}
-	
+
 	public void stop()
 	{
-		if(timersExecutor==null) {
-			logger.warn("The worker pool " + workerPoolName + " is already stopped or not started, can not stop it second time!!!!");
+		if (timersExecutor == null)
+		{
+			logger.warn("The worker pool " + name + " is already stopped or not started, can not stop it second time!!!!");
 			return;
 		}
-		
+
 		workersExecutors.shutdown();
-		workersExecutors =  null;
-		
+		workersExecutors = null;
+
 		timersExecutor.shutdown();
 		timersExecutor = null;
-		
+
 		healthCheckExecutor.shutdown();
 		healthCheckExecutor = null;
-		
-		for (Worker worker : workers) {
+
+		for (Worker worker : workers)
 			worker.stop();
-		}
-		
+
 		workers = null;
+		poolManager.notifyPoolStopped(this);
 	}
-	
+
+	public int getId()
+	{
+		return id;
+	}
+
+	public String getName()
+	{
+		return name;
+	}
+
 	public void addTaskFirst(RunnableTask task)
 	{
 		CountableQueue<Task> queue = this.getQueue(task.getId());
@@ -128,16 +143,17 @@ public class WorkerPool
 		if (queue != null)
 			queue.offerLast(task);
 	}
-	
-	public void addTimer(RunnableTimer timer) {
+
+	public void addTimer(RunnableTimer timer)
+	{
 		int queueIndex = this.findQueueIndex(timer.getId());
-		
+
 		timer.setQueueIndex(queueIndex);
 		periodicQueue.store(timer.getRealTimestamp(), timer);
 	}
 
 	private CountableQueue<Task> getQueue(String id)
-	{		
+	{
 		int index = this.findQueueIndex(id);
 		return this.getLocalQueue(index);
 	}
@@ -146,41 +162,52 @@ public class WorkerPool
 	{
 		return Math.abs(id.hashCode()) % workers.size();
 	}
-	
-	public CountableQueue<Task> getQueue() 
+
+	public CountableQueue<Task> getQueue()
 	{
 		return queue;
 	}
 
-	public CountableQueue<Task> getLocalQueue(int index) 
+	public CountableQueue<Task> getLocalQueue(int index)
 	{
-		// logger.debug("workers " + workers + " workers size " + workers.size() + " index " + index);
-		if(workers == null || index>=workers.size())
+		if (workers == null || index >= workers.size())
 			return null;
-		
+
 		return workers.get(index).getLocalQueue();
 	}
-	
-	public PeriodicQueuedTasks<Timer> getPeriodicQueue() 
+
+	public PeriodicQueuedTasks<Timer> getPeriodicQueue()
 	{
 		return periodicQueue;
-	}		
-	
+	}
+
 	public Long getQueueSize()
 	{
 		return totalPendingTasks.get();
 	}
-	
+
+	public List<Integer> getLocalQueuesSize()
+	{
+		List<Integer> result = new ArrayList<>();
+		if (workers == null)
+			return result;
+
+		for (Worker worker : workers)
+			result.add(worker.getLocalQueue().size());
+
+		return result;
+	}
+
 	public Long getScheduledSize()
 	{
 		return totalPendingTimersTasks.get();
 	}
-	
+
 	public Long getStoredTasks()
 	{
 		return totalStoredTasks.get();
 	}
-	
+
 	public Long getStoredScheduledTasks()
 	{
 		return totalStoredTimerTasks.get();
