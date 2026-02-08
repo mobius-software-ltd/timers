@@ -91,7 +91,7 @@ public class WorkerPool
 		}
 
 		healthCheckExecutor = Executors.newSingleThreadScheduledExecutor();
-		healthCheckExecutor.scheduleWithFixedDelay(new HealthCheckTimer(workers, maxHealthCheckExecutionTime), 0, healthCheckInterval, TimeUnit.MILLISECONDS);
+		healthCheckExecutor.scheduleWithFixedDelay(new HealthCheckTimer(workers, maxHealthCheckExecutionTime), healthCheckInterval, healthCheckInterval, TimeUnit.MILLISECONDS);
 
 		poolManager.notifyPoolStarted(this);
 	}

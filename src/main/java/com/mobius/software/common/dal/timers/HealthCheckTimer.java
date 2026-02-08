@@ -41,14 +41,15 @@ public class HealthCheckTimer implements Runnable
 		if (workers != null && workers.size() > 0)
 		{
 			for (Worker worker : workers)
-			{
+			{			
 				Task lastTask = worker.getLastTask();
 				Long taskTime = worker.getCurrentTaskStartTime();
 				Long expirationTime = System.currentTimeMillis() - maxExecutionTime;
 
 				if (lastTask != null && taskTime!=null && expirationTime > taskTime)
 				{
-					logger.error("Task was not executed within max allowed time. Task details: " + lastTask.printTaskDetails());
+					worker.resetLastTask();
+					logger.error("Task was not executed within max allowed time in worker " + worker.getWorkerIndex() + ". Task details: " + lastTask.printTaskDetails());				
 				}
 			}
 		}

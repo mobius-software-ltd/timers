@@ -79,9 +79,15 @@ public class Worker  implements Runnable
 				}
 				
 				if(task==null)
+				{
 					task = this.queue.poll(this.taskPoolInterval, TimeUnit.MILLISECONDS);
+					lastTask = task;					
+				}
 				else
+				{
 					task = this.queue.poll();
+					lastTask = task;					
+				}
 				
 				if (task != null)
 				{
@@ -122,9 +128,19 @@ public class Worker  implements Runnable
 		return localQueue;
 	}
 
+	public Integer getWorkerIndex()
+	{
+		return workerIndex;
+	}
+	
 	public Task getLastTask() 
 	{
 		return lastTask;
+	}
+	
+	public void resetLastTask()
+	{
+		this.lastTask = null;
 	}
 	
 	public Long getCurrentTaskStartTime()
