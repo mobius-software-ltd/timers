@@ -72,6 +72,11 @@ public class WorkerPool
 
 	public void start(int workersNumber)
 	{
+		start(workersNumber, Long.MAX_VALUE);
+	}
+	
+	public void start(int workersNumber, long alertThreshold)
+	{
 		if (timersExecutor != null)
 		{
 			logger.warn("The worker pool  " + name + " is already started, can not start it second time!!!!");
@@ -91,7 +96,7 @@ public class WorkerPool
 		}
 
 		healthCheckExecutor = Executors.newSingleThreadScheduledExecutor();
-		healthCheckExecutor.scheduleWithFixedDelay(new HealthCheckTimer(workers, maxHealthCheckExecutionTime), healthCheckInterval, healthCheckInterval, TimeUnit.MILLISECONDS);
+		healthCheckExecutor.scheduleWithFixedDelay(new HealthCheckTimer(workers, maxHealthCheckExecutionTime, alertThreshold), healthCheckInterval, healthCheckInterval, TimeUnit.MILLISECONDS);
 
 		poolManager.notifyPoolStarted(this);
 	}
