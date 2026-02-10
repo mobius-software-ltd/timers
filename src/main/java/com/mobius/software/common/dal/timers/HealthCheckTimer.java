@@ -61,7 +61,8 @@ public class HealthCheckTimer implements Runnable
 				{
 					logger.warn("Worker {} has reached more than {} tasks in pending queue, current pending tasks number: {}", workerName, alertThreshold, pendingTasks);
 					worker.setIsAlerted(true);
-				} else if (pendingTasks < alertThreshold && isAlerted)
+				} 
+				else if (pendingTasks < alertThreshold && isAlerted)
 				{
 					logger.warn("Worker {} now has less than {} tasks in pending queue, current pending tasks number: {}", workerName, alertThreshold, pendingTasks);
 					worker.setIsAlerted(false);
