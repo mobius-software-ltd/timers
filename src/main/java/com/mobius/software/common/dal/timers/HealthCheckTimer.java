@@ -25,33 +25,48 @@ import org.apache.logging.log4j.Logger;
  */
 public class HealthCheckTimer implements Runnable
 {
-	private static Logger logger = LogManager.getLogger(HealthCheckTimer.class);
+	private static final Logger logger = LogManager.getLogger(HealthCheckTimer.class);
 	private long maxExecutionTime;
+	private long alertThreshold;
 	private List<Worker> workers;
 
-	public HealthCheckTimer(List<Worker> workers, long maxExecutionTime)
+	public HealthCheckTimer(List<Worker> workers, long maxExecutionTime, long alertThreshold)
 	{
 		this.workers = workers;
 		this.maxExecutionTime = maxExecutionTime;
+		this.alertThreshold = alertThreshold;
 	}
 
 	@Override
 	public void run()
 	{
 		if (workers != null && workers.size() > 0)
-		{
 			for (Worker worker : workers)
 			{			
 				Task lastTask = worker.getLastTask();
 				Long taskTime = worker.getCurrentTaskStartTime();
 				Long expirationTime = System.currentTimeMillis() - maxExecutionTime;
 
+				String workerName = worker.getWorkerName();
 				if (lastTask != null && taskTime!=null && expirationTime > taskTime)
 				{
 					worker.resetLastTask();
-					logger.error("Task was not executed within max allowed time in worker " + worker.getWorkerIndex() + ". Task details: " + lastTask.printTaskDetails());				
+					logger.error("Task was not executed within max allowed time in worker " + workerName + ". Task details: " + lastTask.printTaskDetails());				
+				}
+								
+				int pendingTasks = worker.getLocalQueue().size();
+				boolean isAlerted = worker.getIsAlerted();
+				
+				if (pendingTasks >= alertThreshold && !isAlerted)
+				{
+					logger.warn("Worker {} has reached more than {} tasks in pending queue, current pending tasks number: {}", workerName, alertThreshold, pendingTasks);
+					worker.setIsAlerted(true);
+				} 
+				else if (pendingTasks < alertThreshold && isAlerted)
+				{
+					logger.warn("Worker {} now has less than {} tasks in pending queue, current pending tasks number: {}", workerName, alertThreshold, pendingTasks);
+					worker.setIsAlerted(false);
 				}
 			}
-		}
 	}
 }

@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class Worker  implements Runnable
 {
-	private static Logger logger = LogManager.getLogger(Worker.class);
+	private static final Logger logger = LogManager.getLogger(Worker.class);
 
 	private CountableQueue<Task> queue;
 	private CountableQueue<Task> localQueue;
@@ -37,6 +37,7 @@ public class Worker  implements Runnable
 	private Integer workerIndex;
 	
 	private Long currentTaskStartTime;
+	private boolean isAlerted;
 	
 	public Worker(String workerPoolName, CountableQueue<Task> queue, CountableQueue<Task> localQueue, boolean isRunning, Long taskPollInterval, Integer workerIndex)
 	{
@@ -121,6 +122,7 @@ public class Worker  implements Runnable
 	public void stop()
 	{
 		this.isRunning = false;
+		this.isAlerted = false;
 	}
 	
 	public CountableQueue<Task> getLocalQueue()
@@ -146,5 +148,20 @@ public class Worker  implements Runnable
 	public Long getCurrentTaskStartTime()
 	{
 		return currentTaskStartTime;
+	}
+	
+	public String getWorkerName()
+	{
+		return workerPoolName + "-" + workerIndex;
+	}
+
+	public boolean getIsAlerted()
+	{
+		return isAlerted;
+	}
+
+	public void setIsAlerted(boolean isAlerted)
+	{
+		this.isAlerted = isAlerted;
 	}
 }
